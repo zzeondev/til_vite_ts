@@ -1,144 +1,207 @@
-# 프로젝트 초기 기본 설정
+# useState
 
-- main.tsx
+## 기본 폴더 구조 생성
 
-```tsx
-import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
+- /src/components 폴더 생성
+- /src/components/Counter.jsx 파일 생성
+- 참고로 실제 프로젝트에서 tsx 가 어렵다면, jsx 로 작업 후 ai 에게 tsx 로 만들어줘. 해도 됨
 
-createRoot(document.getElementById('root')!).render(<App />);
-```
+### ts 프로젝트에서 jsx 를 사용하도록 설정하기
 
-# 컴포넌트 생성
+- `tsconfig.app.json` 수정
 
-## 1. 함수형태
+```json
+{
+  "compilerOptions": {
+    "composite": true, // ← 프로젝트 참조 사용 시 필요
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
 
-- `rfce`
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
 
-```tsx
-function App(): JSX.Element {
-  return <div>App</div>;
+    "allowJs": true,
+    "checkJs": false,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
 }
-
-export default App;
 ```
 
-## 2. 표현식 형태
+- `./vscode/settings.json` 수정
 
-- `rafce`
+```json
+{
+  "files.autoSave": "off",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.paths": true,
+  "javascript.suggest.autoImports": true,
+  "javascript.suggest.paths": true,
 
-```tsx
-const App = (): JSX.Element => {
-  return <div>App</div>;
-};
-
-export default App;
+  // 워크스페이스 TS 사용(강력 권장)
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
 ```
 
-- 컴포넌트 생성 및 활용
+## useState 활용해 보기
 
 ```jsx
-const Sample = (): JSX.Element => {
-  return <div>샘플입니다.</div>;
-};
+import { useState } from 'react';
 
-const App = (): JSX.Element => {
+const Counter = () => {
+  //js
+  const [count, setCount] = useState(0);
+  const add = () => {
+    setCount(count + 1);
+  };
+  const minus = () => {
+    setCount(count - 1);
+  };
+  const reset = () => {
+    setCount(0);
+  };
+
+  // jsx
   return (
     <div>
-      <h1>App</h1>
-      <Sample></Sample>
+      <h1>Counter : {count} </h1>
+      <button onClick={add}>증가</button>
+      <button onClick={minus}>감소</button>
+      <button onClick={reset}>리셋</button>
     </div>
   );
 };
 
-export default App;
+export default Counter;
 ```
 
-## 3. 자식 즉, `children 요소를 배치시 오류` 발생
+- 위의 코드를 tsx 로 마이그레이션 진행
+- 확장자를 `tsx` 로 변경
 
 ```tsx
-// children : 타입이 없어서 오류가 발생함
-const Sample = ({ children }): JSX.Element => {
-  return <div>샘플입니다.</div>;
-};
+import { useState } from 'react';
 
-const App = (): JSX.Element => {
+type CounterProps = {};
+type VoidFun = () => void;
+
+const Counter = ({}: CounterProps): JSX.Element => {
+  // js
+  const [count, setCount] = useState<number>(0);
+  const add: VoidFun = () => {
+    setCount(count + 1);
+  };
+  const minus: VoidFun = () => {
+    setCount(count - 1);
+  };
+  const reset: VoidFun = () => {
+    setCount(0);
+  };
+
+  // jsx
   return (
     <div>
-      <h1>App</h1>
-      <Sample>
-        <h2>자식입니다.</h2>
-      </Sample>
+      <h1>Counter : {count} </h1>
+      <button onClick={add}>증가</button>
+      <button onClick={minus}>감소</button>
+      <button onClick={reset}>리셋</button>
     </div>
   );
 };
 
-export default App;
+export default Counter;
 ```
 
-- children 타입 없는 오류 해결 1 (추천하지 않음)
+- 사용자 이름 편집 기능 예제
+- /src/components/NameEditor.jsx
 
-```tsx
-// React.FC 에 React 가 가지고 있는 Children Props 를 사용한다고 명시
-const Sample: React.FC<React.PropsWithChildren> = ({ children }): JSX.Element => {
-  return <div>샘플입니다.</div>;
+```jsx
+import { useState } from 'react';
+
+const NameEditor = () => {
+  const [name, setName] = useState('');
+  const handleChange = e => {
+    setName(e.target.value);
+  };
+  const handleClick = () => {
+    console.log('확인');
+    setName('');
+  };
+
+  return (
+    <div>
+      <h2> NameEditor : {name}</h2>
+      <div>
+        <input type="text" value={name} onChange={e => handleChange(e)} />
+        <button onClick={handleClick}>확인</button>
+      </div>
+    </div>
+  );
 };
+
+export default NameEditor;
 ```
 
-- children 타입 없는 오류 해결 2 (적극 추천 : props 에 대해서 일관성 유지)
+- tsx 로 마이그레이션 : 확장자를 수정
 
 ```tsx
-type SampleProps = {
+import { useState } from 'react';
+
+type NameEditroProps = {
   children?: React.ReactNode;
 };
 
-const Sample = ({ children }: SampleProps): JSX.Element => {
-  return <div>{children}</div>;
-};
+const NameEditor = ({}: NameEditroProps): JSX.Element => {
+  const [name, setName] = useState<string>('');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setName(e.target.value);
+  };
+  const handerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      console.log('Enter 입력함');
+      setName('');
+    }
+  };
+  const handleClick = (): void => {
+    console.log('확인');
+    setName('');
+  };
 
-const App = (): JSX.Element => {
   return (
     <div>
-      <h1>App</h1>
-      <Sample>
-        <h2>자식입니다.</h2>
-      </Sample>
+      <h2> NameEditor : {name}</h2>
+      <div>
+        <input
+          type="text"
+          value={name}
+          onChange={e => handleChange(e)}
+          onKeyDown={e => handerKeyDown(e)}
+        />
+        <button onClick={handleClick}>확인</button>
+      </div>
     </div>
   );
 };
 
-export default App;
-```
-
-- 향후 컴포넌트는 JSX.Element 와 Props 타입을 작성하자
-
-## 4. Props 전달하기
-
-```tsx
-type SampleProps = {
-  // children 은 선택사항이지만 적는 거 추천
-  children?: React.ReactNode;
-  age: number;
-  nickName: string;
-};
-
-const Sample = ({ age, nickName }: SampleProps) => {
-  return (
-    <div>
-      {age}살이고 별명이{nickName} 인 샘플입니다.
-    </div>
-  );
-};
-
-const App = () => {
-  return (
-    <div>
-      <h1>App</h1>
-      <Sample age={20} nickName="홍길동" />
-    </div>
-  );
-};
-
-export default App;
+export default NameEditor;
 ```
