@@ -1,5 +1,4 @@
 import { useState } from 'react';
-
 import TodoWrite from './components/todos/TodoWrite';
 import type { TodoType } from './types/TodoType';
 import TodoList from './components/todos/TodoList';
