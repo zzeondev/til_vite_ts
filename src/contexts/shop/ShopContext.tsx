@@ -44,17 +44,12 @@ type ShopAction =
   | ShopActionReset;
 
 // 장바구니 전체 금액 계산하기
-function calcCart(nowState: ShopStateType): number {
-  const total = nowState.cart.reduce((sum, 장바구니제품) => {
-    // id를 이용해서 제품 상세 정보 찾기
-    const good = nowState.goods.find(g => g.id === 장바구니제품.id);
-    if (good) {
-      return sum + good.price * 장바구니제품.qty; // 반드시 return
-    }
-    return sum; // good이 없으면 그대로 반환
+// 총액 계산 함수 (state 대신 cart, goods만 받도록)
+function calcTotal(cart: CartType[], goods: GoodType[]): number {
+  return cart.reduce((sum, c) => {
+    const good = goods.find(g => g.id === c.id);
+    return good ? sum + good.price * c.qty : sum;
   }, 0);
-
-  return total;
 }
 
 function reducer(state: ShopStateType, action: ShopAction) {
@@ -102,7 +97,7 @@ function reducer(state: ShopStateType, action: ShopAction) {
 
     case ShopActionType.BUY_ALL: {
       // 총 금액계산
-      const total = calcCart(state);
+      const total = calcTotal(state.cart, state.goods);
       if (total > state.balance) {
         alert('돈이 부족합니다. 장바구니를 줄이세요');
         return state;
@@ -165,11 +160,21 @@ export const ShopProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 };
 
 // 5. 커스텀 훌
-
 export function useShop() {
   const ctx = useContext(ShopContext);
   if (!ctx) {
     throw new Error('Shop 컨텍스트가 생성되지 않았습니다.');
   }
   return ctx;
+}
+
+// 6. 추가 커스텀 훅 : 상품 찾기, 총액
+export function useShopSelectors() {
+  const { goods, cart } = useShop();
+  // 제품 한 개 정보 찾기
+  const getGood = (id: number) => goods.find(item => item.id === id);
+  // 충 금액
+  const total = calcTotal(cart, goods);
+  // 리턴
+  return { getGood, total };
 }
