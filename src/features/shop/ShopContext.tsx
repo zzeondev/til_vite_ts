@@ -4,7 +4,6 @@ import { reducer } from './reducer';
 import { initialState } from './state';
 
 export const ShopContext = createContext<ShopValueType | null>(null);
-
 export const ShopProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
