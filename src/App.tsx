@@ -9,6 +9,7 @@ import GoodsPage from './pages/GoodsPage';
 import CartPage from './pages/CartPage';
 import WalletPage from './pages/WalletPage';
 import NotFound from './pages/NotFound';
+import Calendar from './pages/Calendar';
 
 function App() {
   // ts
@@ -62,6 +63,7 @@ function App() {
           </NavLink>
         </nav>
         <h1>🚩나의 가게</h1>
+        <Calendar />
         <ShopProvider>
           <div>
             <Routes>
