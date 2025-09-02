@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-types": "npx supabase gen types typescript --project-id jinvuynwlrgxoisfdjyh --schema public > types_db.ts"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
@@ -16,6 +17,7 @@
     "@fullcalendar/list": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
+    "@supabase/supabase-js": "^2.56.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.1"
