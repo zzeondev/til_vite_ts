@@ -1,5 +1,6 @@
 export type TodoType = { id: string; title: string; completed: boolean };
 
+// 개발자가 직접 작성해줌
 export type Todo = Database['public']['Tables']['todos']['Row'];
 export type TodoInsert = Database['public']['Tables']['todos']['Insert'];
 export type TodoUpdate = Database['public']['Tables']['todos']['Update'];

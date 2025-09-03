@@ -181,3 +181,655 @@ export const toggleTodo = async (id: number, completed: boolean): Promise<Todo |
 ```
 
 ## 7. todos 예제
+
+- /src/types/TodoType.ts
+
+```ts
+export type TodoType = { id: string; title: string; completed: boolean };
+
+// 개발자가 직접 작성해줌
+export type Todo = Database['public']['Tables']['todos']['Row'];
+export type TodoInsert = Database['public']['Tables']['todos']['Insert'];
+export type TodoUpdate = Database['public']['Tables']['todos']['Update'];
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '13.0.4';
+  };
+  public: {
+    Tables: {
+      todos: {
+        Row: {
+          completed: boolean;
+          content: string | null;
+          created_at: string | null;
+          id: number;
+          title: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          completed?: boolean;
+          content?: string | null;
+          created_at?: string | null;
+          id?: number;
+          title: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          completed?: boolean;
+          content?: string | null;
+          created_at?: string | null;
+          id?: number;
+          title?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+};
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>];
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const;
+```
+
+- /src/services/todoService.ts
+
+```ts
+import { supabase } from '../lib/supabase';
+import type { Todo, TodoInsert, TodoUpdate } from '../types/TodoType';
+
+// Todo 목록 조회
+export const getTodos = async (): Promise<Todo[]> => {
+  const { data, error } = await supabase
+    .from('todos')
+    .select('*')
+    .order('created_at', { ascending: false });
+  // 실행은 되었지만, 결과가 오류이다.
+  if (error) {
+    throw new Error(`getTodos 오류 : ${error.message}`);
+  }
+  return data || [];
+};
+
+// Todo 생성
+export const createTodo = async (newTodo: TodoInsert): Promise<Todo | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('todos')
+      .insert([{ ...newTodo, completed: false }])
+      .select()
+      .single();
+    if (error) {
+      throw new Error(`createTodo 오류 : ${error.message}`);
+    }
+    return data;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+// Todo 수정
+export const updateTodo = async (id: number, editTitle: TodoUpdate): Promise<Todo | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('todos')
+      .update({ ...editTitle, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`updateTodo 오류 : ${error.message}`);
+    }
+    return data;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+// Todo 삭제
+export const deleteTodo = async (id: number): Promise<void> => {
+  try {
+    const { error } = await supabase.from('todos').delete().eq('id', id);
+    if (error) {
+      throw new Error(`deleteTodo 오류 : ${error.message}`);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// Completed Toggle
+export const toggleTodo = async (id: number, completed: boolean): Promise<Todo | null> => {
+  return updateTodo(id, { completed });
+};
+```
+
+- /src/contexts/TodoContext.tsx
+
+```tsx
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  type PropsWithChildren,
+} from 'react';
+import type { Todo } from '../types/TodoType';
+// 전체 DB 가져오기
+import { getTodos } from '../services/todoService';
+
+// 1. 초기값
+type TodosState = { todos: Todo[] };
+const initialState: TodosState = {
+  todos: [],
+};
+
+// 2. 리듀서
+// action 은 {type : "문자열", payload : 재료} 형태
+enum TodoActionType {
+  ADD = 'ADD',
+  DELETE = 'DELETE',
+  TOGGLE = 'TOGGLE',
+  EDIT = 'EDIT',
+  // Supabase todos 의 목록읽기
+  SET_TODOS = 'SET_TODOS',
+}
+
+type AddAction = { type: TodoActionType.ADD; payload: { todo: Todo } };
+type DeleteAction = { type: TodoActionType.DELETE; payload: { id: number } };
+type ToggleAction = { type: TodoActionType.TOGGLE; payload: { id: number } };
+type EditAction = { type: TodoActionType.EDIT; payload: { id: number; title: string } };
+// Supabase 목록으로 state.todos 배열을 채워라
+type SetTodosAction = { type: TodoActionType.SET_TODOS; payload: { todos: Todo[] } };
+
+function reducer(
+  state: TodosState,
+  action: AddAction | DeleteAction | ToggleAction | EditAction | SetTodosAction,
+) {
+  switch (action.type) {
+    case TodoActionType.ADD: {
+      const { todo } = action.payload;
+      // 초기값이 객제냐 배열이냐에 따라서 리턴값도 객체인지 배열인지 달라짐 - 현재는 객체라 객체로 리턴
+      return { ...state, todos: [todo, ...state.todos] };
+    }
+    case TodoActionType.TOGGLE: {
+      const { id } = action.payload;
+      const arr = state.todos.map(item =>
+        item.id === id ? { ...item, completed: !item.completed } : item,
+      );
+      return { ...state, todos: arr };
+    }
+    case TodoActionType.DELETE: {
+      const { id } = action.payload;
+      const arr = state.todos.filter(item => item.id !== id);
+      return { ...state, todos: arr };
+    }
+    case TodoActionType.EDIT: {
+      const { id, title } = action.payload;
+      const arr = state.todos.map(item => (item.id === id ? { ...item, title } : item));
+      return { ...state, todos: arr };
+    }
+    // Supabase 에 목록 읽기
+    case TodoActionType.SET_TODOS: {
+      const { todos } = action.payload;
+      return { ...state, todos };
+    }
+    default:
+      return state;
+  }
+}
+
+// 3. context 생성
+// 만들어진 Context 가 관리하는 Value 의 모양
+type TodoContextValue = {
+  todos: Todo[];
+  addTodo: (todo: Todo) => void;
+  toggleTodo: (id: number) => void;
+  deleteTodo: (id: number) => void;
+  editTodo: (id: number, editTitle: string) => void;
+};
+const TodoContext = createContext<TodoContextValue | null>(null);
+
+// 4. provider 생성
+export const TodoProvider: React.FC<PropsWithChildren> = ({ children }): JSX.Element => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  // dispatch 를 위한 함수 표현식 모음
+  const addTodo = (newTodo: Todo) => {
+    dispatch({ type: TodoActionType.ADD, payload: { todo: newTodo } });
+  };
+  const toggleTodo = (id: number) => {
+    // 이름이 같으면 줄이기 가능 ex.id:id 형태를 id 로 줄이기 가능
+    dispatch({ type: TodoActionType.TOGGLE, payload: { id } });
+  };
+  const deleteTodo = (id: number) => {
+    dispatch({ type: TodoActionType.DELETE, payload: { id } });
+  };
+  const editTodo = (id: number, editTitle: string) => {
+    dispatch({ type: TodoActionType.EDIT, payload: { id, title: editTitle } });
+  };
+  // 실행시 state { todos } 를 업데이트 함
+  // reducer 함수를 실행함
+  const setTodos = (todos: Todo[]) => {
+    dispatch({ type: TodoActionType.SET_TODOS, payload: { todos } });
+  };
+  // Supabase 의 목록 읽기 함수 표현식
+  // 비동기 데이터베이스 접근
+  const loadTodos = async (): Promise<void> => {
+    try {
+      const result = await getTodos();
+      setTodos(result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
+  // value 전달할 값
+  const value: TodoContextValue = {
+    todos: state.todos,
+    // 이름이 같으면 줄이기 가능 ex.addTodo: addTodo, 이 형태를 addTodo, 이렇게 줄이기 가능
+    addTodo,
+    toggleTodo,
+    deleteTodo,
+    editTodo,
+  };
+  return <TodoContext.Provider value={value}>{children}</TodoContext.Provider>;
+};
+
+// 5. custom hook 생성
+export function useTodos(): TodoContextValue {
+  const ctx = useContext(TodoContext);
+  if (!ctx) {
+    throw new Error('컨텍스트가 없어요.');
+  }
+  return ctx;
+}
+```
+
+- /src/lib/supabase.ts
+
+```ts
+import { createClient } from '@supabase/supabase-js';
+
+// CRA 의 환경변수 호출과는 형식이 다름
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+```
+
+- /src/components/todos/TodoList.tsx
+
+```tsx
+import { useTodos } from '../../contexts/TodoContext';
+import type { Todo } from '../../types/TodoType';
+import TodoItem from './TodoItem';
+
+type TodoListProps = {};
+
+const TodoList = ({}: TodoListProps): JSX.Element => {
+  const { todos } = useTodos();
+  return (
+    <div>
+      <h2>TodoList</h2>
+      <ul>
+        {todos.map((item: Todo) => (
+          <TodoItem key={item.id} todo={item} />
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default TodoList;
+```
+
+- /src/components/todos/TodoItem.tsx
+
+```tsx
+import { useState } from 'react';
+import type { Todo } from '../../types/TodoType';
+import { useTodos } from '../../contexts/TodoContext';
+import {
+  updateTodo as updateTodoService,
+  toggleTodo as toggleTodoService,
+  deleteTodo as deleteTodoService,
+} from '../../services/todoService';
+
+type TodoItemProps = {
+  todo: Todo;
+};
+
+const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
+  const { toggleTodo, editTodo, deleteTodo } = useTodos();
+  // 수정중인지
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [editTitle, setEditTitle] = useState<string>(todo.title);
+  const handleChangeTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setEditTitle(e.target.value);
+  };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter') {
+      // 타이틀 수정
+      handleEditSave();
+    }
+  };
+  // 비동기로 DB 에 update 한다.
+  const handleEditSave = async (): Promise<void> => {
+    if (!editTitle.trim()) {
+      alert('제목을 입력하세요');
+      return;
+    }
+
+    try {
+      // DB 의 내용 업데이트
+      const result = await updateTodoService(todo.id, { title: editTitle });
+
+      if (result) {
+        // context 의 state.todos 의 항목 1개의 타이틀 수정
+        editTodo(todo.id, editTitle);
+        setIsEdit(false);
+      }
+    } catch (error) {
+      console.log('데이터 업데이트에 실패하였습니다.');
+    }
+  };
+  const handleEditCancel = (): void => {
+    setEditTitle(todo.title);
+    setIsEdit(false);
+  };
+
+  // 비동기 통신으로 toggle 업데이트
+  const handleToggle = async (): Promise<void> => {
+    try {
+      // DB 의 completed 가 업데이트 성공시 Todo 타입 리턴
+      const result = await toggleTodoService(todo.id, !todo.completed);
+      if (result) {
+        // context 의 state.todos 의 1개 항목 completed 업데이트
+        toggleTodo(todo.id);
+      }
+    } catch (error) {
+      console.log('데이터베이스 Toggle 이 샐패하였어요', error);
+    }
+  };
+
+  // DB 의 데이터 delete
+  const handleDelete = async (): Promise<void> => {
+    try {
+      // DB 삭제기능
+      await deleteTodoService(todo.id);
+      // state 삭제기능
+      deleteTodo(todo.id);
+    } catch (error) {
+      console.log('DB 삭제를 실패하였습니다.', error);
+    }
+  };
+
+  return (
+    <li>
+      {isEdit ? (
+        <>
+          <input
+            type="text"
+            value={editTitle}
+            onChange={e => handleChangeTitle(e)}
+            onKeyDown={e => handleKeyDown(e)}
+          />
+          <button onClick={handleEditSave}>저장</button>
+          <button onClick={handleEditCancel}>취소</button>
+        </>
+      ) : (
+        <>
+          <input type="checkbox" checked={todo.completed} onChange={handleToggle} />
+          <span>{todo.title}</span>
+          <button onClick={() => setIsEdit(true)}>수정</button>
+          <button onClick={handleDelete}>삭제</button>
+        </>
+      )}
+    </li>
+  );
+};
+
+export default TodoItem;
+```
+
+- /src/components/todos/TodoWrite.tsx
+
+```tsx
+import { useState } from 'react';
+import type { TodoInsert } from '../../types/TodoType';
+import { useTodos } from '../../contexts/TodoContext';
+import { createTodo } from '../../services/todoService';
+
+type TodoWriteProps = {
+  children?: React.ReactNode;
+};
+
+const TodoWrite = ({}: TodoWriteProps): JSX.Element => {
+  // Context 를 사용함
+  const { addTodo } = useTodos();
+  const [title, setTitle] = useState<string>('');
+  const [content, setContente] = useState<string>('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setTitle(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter') {
+      // 저장하기
+      handleSave();
+    }
+  };
+
+  // Supabase 에 데이터를 Insert 한다. : 비동기
+  const handleSave = async (): Promise<void> => {
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
+    }
+
+    try {
+      const newTodo: TodoInsert = { title, content };
+      // Supabase 에 데이터를 Insert 함
+      // Insert 결과로 추가가 된 Todo 형태를 받아옴
+      const result = await createTodo(newTodo);
+      // Context 에 데이터를 추가해 줌
+      if (result) {
+        addTodo(result);
+      }
+
+      // 현재 Write 컴포넌트 state 초기화
+      setTitle('');
+      setContente('');
+    } catch (error) {
+      console.log(error);
+      alert('데이터 추가에 실패 하였습니다.');
+    }
+  };
+
+  return (
+    <div>
+      <h2>할 일 작성</h2>
+      <div>
+        <input
+          type="text"
+          value={title}
+          onChange={e => handleChange(e)}
+          onKeyDown={e => handleKeyDown(e)}
+        />
+        <button onClick={handleSave}>등록</button>
+      </div>
+    </div>
+  );
+};
+
+export default TodoWrite;
+```
+
+- /src/App.tsx
+
+```tsx
+import React from 'react';
+import { TodoProvider } from './contexts/TodoContext';
+import TodoWrite from './components/todos/TodoWrite';
+import TodoList from './components/todos/TodoList';
+
+function App() {
+  return (
+    <div>
+      <h1>Todo Service</h1>
+      <TodoProvider>
+        <TodoWrite />
+        <TodoList />
+      </TodoProvider>
+    </div>
+  );
+}
+
+export default App;
+```
