@@ -573,6 +573,9 @@ export const useAuth = () => {
 
 ## 12. Protected 에 loading 값 활용하기
 
+- Auth 인증 후 `새로고침` 또는 `주소 직접 입력` 시 `인증 상태를 읽기 위한 시간 확보`
+- AuthContext.tsx 에서 읽어들이기 전까지 Loading 을 활성화 함.
+
 ```tsx
 import type { PropsWithChildren } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -583,11 +586,11 @@ import { Navigate } from 'react-router-dom';
  * - 사용자 프로필 페이지
  * - 관리자 대시보드 페이지
  * - 개인 설정 페이지
- * - 구매 내역 페이지 등등
+ * - 구매 내역 페이지  등등
  */
-
 const Protected: React.FC<PropsWithChildren> = ({ children }) => {
   const { user, loading } = useAuth();
+
   if (loading) {
     // 사용자 정보가 로딩중이라면
     return (
@@ -604,9 +607,12 @@ const Protected: React.FC<PropsWithChildren> = ({ children }) => {
           alignItems: 'center',
           justifyContent: 'center',
         }}
-      ></div>
+      >
+        <div>로딩중...</div>
+      </div>
     );
   }
+
   // 로그인이 안되어서 user 정보가 없으면 로그인 페이지로 이동
   if (!user) {
     return <Navigate to={'/signin'} replace />;

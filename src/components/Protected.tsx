@@ -28,7 +28,9 @@ const Protected: React.FC<PropsWithChildren> = ({ children }) => {
           alignItems: 'center',
           justifyContent: 'center',
         }}
-      ></div>
+      >
+        <div>로딩중...</div>
+      </div>
     );
   }
   // 로그인이 안되어서 user 정보가 없으면 로그인 페이지로 이동
