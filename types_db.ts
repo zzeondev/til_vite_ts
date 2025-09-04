@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      memos: {
+        Row: {
+          created_at: string
+          id: number
+          memo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          memo: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          memo?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          nickname: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          nickname?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          nickname?: string | null
+        }
+        Relationships: []
+      }
       todos: {
         Row: {
           completed: boolean

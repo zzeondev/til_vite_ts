@@ -94,6 +94,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     if (error) {
       return { error: error.message };
     }
+    //
     return {};
   };
   // 회원 로그아웃
