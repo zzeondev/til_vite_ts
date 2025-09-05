@@ -466,17 +466,18 @@ import type { Session, User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { supabase } from '../lib/supabase';
 
+
 // 1. 인증 컨텍스트 타입
 type AuthContextType = {
   // 현재 사용자의 세션정보 (로그인 상태, 토큰)
   session: Session | null;
   // 현재 로그인 된 사용자 정보
   user: User | null;
-  // 회원가입 함수(이메일, 비밀번호)
+  // 회원 가입 함수(이메일, 비밀번호) : 비동기라서
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   // 회원 로그인 함수(이메일, 비밀번호) : 비동기라서
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  // 로그아웃
+  // 회원 로그아웃
   signOut: () => Promise<void>;
   // 회원정보 로딩 상태
   loading: boolean;
@@ -493,9 +494,9 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   // 로딩 상태 추가 : 초기 실행시 로딩 시킴, true
   const [loading, setLoading] = useState<boolean>(true);
-  // 초기 세션 로드 및 인증 상태 변경 검시
+  // 초기 세션 로드 및 인증 상태 변경 감시
   useEffect(() => {
-    // 세션을 초기해 로딩을 한 후 처리한다.
+    // 세션을 초기에 로딩을 한 후 처리한다.
     const loadSession = async () => {
       try {
         setLoading(true); // 로딩중
@@ -544,6 +545,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     // 이메일 확인 후 인증 전까지는 아무것도 넘어오지 않습니다.
     return {};
   };
+  
   // 회원 로그인 함수(이메일, 비밀번호) : 비동기라서
   const signIn: AuthContextType['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password, options: {} });
@@ -555,9 +557,15 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   // 회원 로그아웃
   const signOut: AuthContextType['signOut'] = async () => {
     await supabase.auth.signOut();
+  };  const value: AuthContextType = {
+    signUp,
+    signIn,
+    signOut,
+    user,
+    session,
+    loading,
   };
 
-  const value: AuthContextType = { signUp, signIn, signOut, user, session, loading };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
