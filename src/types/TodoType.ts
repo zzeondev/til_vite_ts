@@ -10,6 +10,13 @@ export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
+// 삭제 신청 목록 정보
+export type DeleteRequest = Database['public']['Tables']['account_deletion_requests']['Row'];
+export type DeleteRequestInsert =
+  Database['public']['Tables']['account_deletion_requests']['Insert'];
+export type DeleteRequestUpdate =
+  Database['public']['Tables']['account_deletion_requests']['Update'];
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -20,6 +27,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          admin_notes: string | null;
+          id: string;
+          processed_at: string | null;
+          processed_by: string | null;
+          reason: string | null;
+          requested_at: string | null;
+          status: string | null;
+          user_email: string;
+          user_id: string | null;
+        };
+        Insert: {
+          admin_notes?: string | null;
+          id?: string;
+          processed_at?: string | null;
+          processed_by?: string | null;
+          reason?: string | null;
+          requested_at?: string | null;
+          status?: string | null;
+          user_email: string;
+          user_id?: string | null;
+        };
+        Update: {
+          admin_notes?: string | null;
+          id?: string;
+          processed_at?: string | null;
+          processed_by?: string | null;
+          reason?: string | null;
+          requested_at?: string | null;
+          status?: string | null;
+          user_email?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       memos: {
         Row: {
           created_at: string;
