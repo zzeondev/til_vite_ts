@@ -30,9 +30,9 @@ const createProfile = async (newUserProfile: ProfileInsert): Promise<boolean> =>
 // 사용자 프로필 조회
 const getProfile = async (userId: string): Promise<Profile | null> => {
   try {
-    console.log(userId);
+    // console.log(userId);
     const { error, data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    console.log(data);
+    // console.log(data);
     if (error) {
       console.log(error.message);
       return null;
@@ -66,7 +66,91 @@ const updateProfile = async (editUserProfile: ProfileUpdate, userId: string): Pr
 const deleteProfile = () => {};
 
 // 사용자 프로필 이미지 업로드
-const uploadAvatar = () => {};
+const uploadAvatar = async (file: File, userId: string): Promise<string | null> => {
+  try {
+    // 파일 타입 검사
+    // 파일 형식 검증
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error(`지원하지 않는 파일 형식입니다. 허용 형식: ${allowedTypes.join(', ')}`);
+    }
+    // 파일 크기 검증 (5MB 제한)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new Error(`파일 크기가 너무 큽니다. 최대 5MB까지 업로드 가능합니다.`);
+    }
+
+    // 기존에 만약 아바타 이미지가 있으면 무조건 삭제부터 합니다.
+    const result = await cleanupUserAvatars(userId);
+    if (!result) {
+      console.log('파일 못 지웠어요.');
+    }
+
+    // 파일명이 중복되지 않도록 이름을 생성함
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}-${Date.now()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    // storage 에 bucket 이 존재하는지 검사
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+    if (bucketError) {
+      throw new Error(`Storage 버킷 확인 실패 : ${bucketError.message}`);
+    }
+    // bucket 들의 목록 전달 {} 형태로 나옴. user-images 라는 이름에 업로드
+    let profileImagesBucket = buckets.find(item => item.name === 'user-images');
+    if (!profileImagesBucket) {
+      throw new Error('user-imgaes 버킷이 존재하지 않음. 버킷생성 필요!!');
+    }
+    // 파일 업로드 : upload(파일명, 실제파일, 옵션)
+    const { data, error } = await supabase.storage.from('user-images').upload(filePath, file, {
+      cacheControl: '3600', // 3600 초는 1시간 동안 파일 캐시 적용
+      upsert: false, // 동일한 파일명은 덮어씌운다.
+    });
+    if (error) {
+      throw new Error(`업로드 실패 : ${error.message}`);
+    }
+    // https 문자열로 주소를 알아내서 활용
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('user-images').getPublicUrl(filePath);
+    return publicUrl;
+  } catch (error) {
+    throw new Error(`아바타 오류가 발생했습니다. : ${error}`);
+  }
+};
+
+// 아바타 이미지는 한장을 유지해야 하므로 모두 제거하는 기능 필요
+const cleanupUserAvatars = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error: listError } = await supabase.storage
+      .from('user-images')
+      .list('avatars', { limit: 1000 });
+    if (listError) {
+      console.log(`목록 요청 에러 : ${listError.message}`);
+      return false;
+    }
+    // userId 에 해당하는 것만 필터링 해서 삭제해야 함.
+    if (data && data.length > 0) {
+      const userFile = data.filter(item => item.name.startsWith(`${userId}-`));
+      if (userFile && userFile.length > 0) {
+        const filePaths = userFile.map(item => `avatars/${item.name}`);
+        const { error: removeError } = await supabase.storage.from('user-images').remove(filePaths);
+        if (removeError) {
+          console.log(`파일 삭제 에러 : ${removeError.message}`);
+          return false;
+        }
+        return true;
+      }
+    }
+    return true;
+  } catch (error) {
+    console.log(`아바타 이미지 전체 삭제 오류 : ${error}`);
+    return false;
+  }
+};
+
+// 사용자 프로필 이미지 제거
+const removeAvatar = () => {};
 
 // 내보내기
 export { createProfile, getProfile, updateProfile, deleteProfile, uploadAvatar };
