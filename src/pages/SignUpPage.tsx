@@ -18,6 +18,7 @@ function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // 웹브라우저 갱신 막기
     e.preventDefault();
+
     if (!email.trim()) {
       alert('이메일을 입력하세요.');
       return;
@@ -47,6 +48,7 @@ function SignUpPage() {
         // 잠시 추가정보를 보관합니다.
         // Supabase 에서 auth 에는 추가적인 정보를 저장하는 객체가 존재
         // 공식적인 명칭이 metadata 라고 합니다.
+        // 이메일 인증 후에 프로필 생성 시에 사용하려고 보관
         data: { nickName: nickName },
       },
     });

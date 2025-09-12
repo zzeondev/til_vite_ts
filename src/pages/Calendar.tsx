@@ -34,7 +34,7 @@ function Calendar() {
       title: '과학 실험',
       start: '2025-09-05T10:00:00',
       end: '2025-09-05T11:00:00',
-      classNames: ['science-event'],
+      className: ['science-event'],
     },
   ]);
   // 일정 상세 보기
@@ -74,7 +74,6 @@ function Calendar() {
     center: 'title',
     right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
   };
-
   return (
     <div>
       <h2>Full Calendar</h2>
@@ -100,15 +99,15 @@ function Calendar() {
           select={e => handleSelect(e)}
           editable={true} // 드래그로 수정
           height={'auto'}
-          eventColor="#90ee90" // 기본 이벤트 배경 색상
-          eventTextColor="#000" // 기본 글자 색상
-          eventBorderColor="#008000" // 기본 테두리 색상
+          eventColor="#90ee90" // 기본 이벤트 배경색상
+          eventTextColor="#000" // 기본 글자색상
+          eventBorderColor="#008000" // 기본 테두리색상
           // JSX 출력하기
           eventContent={e => {
             return (
               <>
                 <div style={{ backgroundColor: 'yellowgreen', padding: '20px' }}>
-                  <b>✨ {e.event.title}</b>
+                  <b>😍 {e.event.title}</b>
                 </div>
               </>
             );

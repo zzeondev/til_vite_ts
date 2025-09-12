@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 type UserProps = {
   children?: React.ReactNode;
   name: string;

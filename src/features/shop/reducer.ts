@@ -19,14 +19,16 @@ export function reducer(state: ShopStateType, action: ShopAction) {
       }
       return { ...state, cart: arr };
     }
-
     case ShopActionType.REMOVE_CART_ONE: {
-      const { id } = action.payload; // 제품의 ID
+      const { id } = action.payload; // 1개 빼줄 제품의 ID
+      // id 제품이 배열에 있는가? qty 가 있는가?
       const existGood = state.cart.find(item => item.id === id);
+
       if (!existGood) {
-        // 제품이 없다면..
+        // 제품이 없다면...
         return state;
       }
+
       let arr: CartType[] = [];
       if (existGood.qty > 1) {
         // 제품이 최소 2개 이상이면
@@ -38,14 +40,12 @@ export function reducer(state: ShopStateType, action: ShopAction) {
 
       return { ...state, cart: arr };
     }
-
     case ShopActionType.CLEAR_CART_ITEM: {
-      // 장바구니에 담긴 제품 제거하기
+      // 담겨진 제품 중에 장바구니에서 제거하기
       const { id } = action.payload;
       const arr = state.cart.filter(item => item.id !== id);
       return { ...state, cart: arr };
     }
-
     case ShopActionType.BUY_ALL: {
       // 총 금액계산
       const total = calcTotal(state.cart, state.goods);
@@ -55,7 +55,6 @@ export function reducer(state: ShopStateType, action: ShopAction) {
       }
       return { ...state, balance: state.balance - total, cart: [] };
     }
-
     case ShopActionType.RESET:
       return initialState;
     default:

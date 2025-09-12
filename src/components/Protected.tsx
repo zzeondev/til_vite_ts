@@ -7,11 +7,11 @@ import { Navigate } from 'react-router-dom';
  * - 사용자 프로필 페이지
  * - 관리자 대시보드 페이지
  * - 개인 설정 페이지
- * - 구매 내역 페이지 등등
+ * - 구매 내역 페이지  등등
  */
-
 const Protected: React.FC<PropsWithChildren> = ({ children }) => {
   const { user, loading } = useAuth();
+
   if (loading) {
     // 사용자 정보가 로딩중이라면
     return (
@@ -33,6 +33,7 @@ const Protected: React.FC<PropsWithChildren> = ({ children }) => {
       </div>
     );
   }
+
   // 로그인이 안되어서 user 정보가 없으면 로그인 페이지로 이동
   if (!user) {
     return <Navigate to={'/signin'} replace />;

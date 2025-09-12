@@ -36,9 +36,7 @@ const createProfile = async (newUserProfile: ProfileInsert): Promise<boolean> =>
 // 사용자 프로필 조회
 const getProfile = async (userId: string): Promise<Profile | null> => {
   try {
-    // console.log(userId);
     const { error, data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    // console.log(data);
     if (error) {
       console.log(error.message);
       return null;
@@ -86,13 +84,13 @@ const uploadAvatar = async (file: File, userId: string): Promise<string | null> 
       throw new Error(`파일 크기가 너무 큽니다. 최대 5MB까지 업로드 가능합니다.`);
     }
 
-    // 기존에 만약 아바타 이미지가 있으면 무조건 삭제부터 합니다.
+    // 기존에 만약 아바타 이미지가 있으면 무조건 삭제 부터합니다.
     const result = await cleanupUserAvatars(userId);
     if (!result) {
       console.log('파일 못 지웠어요.');
     }
 
-    // 파일명이 중복되지 않도록 이름을 생성함
+    // 파일명이 중복되지 않도록 이름을 생성함.
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
@@ -100,31 +98,33 @@ const uploadAvatar = async (file: File, userId: string): Promise<string | null> 
     // storage 에 bucket 이 존재하는지 검사
     const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
     if (bucketError) {
-      throw new Error(`Storage 버킷 확인 실패 : ${bucketError.message}`);
+      throw new Error(`Stroage 버킷 확인 실패 : ${bucketError.message}`);
     }
     // bucket 들의 목록 전달 {} 형태로 나옴. user-images 라는 이름에 업로드
     let profileImagesBucket = buckets.find(item => item.name === 'user-images');
     if (!profileImagesBucket) {
-      throw new Error('user-imgaes 버킷이 존재하지 않음. 버킷생성 필요!!');
+      throw new Error('user-images 버킷이 존재하지 않음. 버킷생성 필요!!');
     }
-    // 파일 업로드 : upload(파일명, 실제파일, 옵션)
+    // 파일업로드 : upload(파일명, 실제파일, 옵션)
     const { data, error } = await supabase.storage.from('user-images').upload(filePath, file, {
       cacheControl: '3600', // 3600 초는 1시간 동안 파일 캐시 적용
-      upsert: false, // 동일한 파일명은 덮어씌운다.
+      upsert: false, // 동일한 파일명은 덮어쒸운다.
     });
+
     if (error) {
       throw new Error(`업로드 실패 : ${error.message}`);
     }
+
     // https 문자열로 주소를 알아내서 활용
     const {
       data: { publicUrl },
     } = supabase.storage.from('user-images').getPublicUrl(filePath);
+
     return publicUrl;
   } catch (error) {
-    throw new Error(`아바타 오류가 발생했습니다. : ${error}`);
+    throw new Error(`아바타 업로드 오류가 발생했습니다. : ${error}`);
   }
 };
-
 // 아바타 이미지는 한장을 유지해야 하므로 모두 제거하는 기능 필요
 const cleanupUserAvatars = async (userId: string): Promise<boolean> => {
   try {
@@ -158,8 +158,8 @@ const cleanupUserAvatars = async (userId: string): Promise<boolean> => {
 // 사용자 프로필 이미지 제거
 const removeAvatar = async (userId: string): Promise<boolean> => {
   try {
-    // 현재 로그인 한 사용자의 avart_url 을 읽어와야 합니다.
-    // 여기서 파일명을 추출함
+    // 현재 로그인 한 사용자의 avartar_url 을 읽어와야 합니다.
+    // 여기서 파일명을 추출함.
     const profile = await getProfile(userId);
     // 사용자가 avatar_url 이 없다면
     if (!profile?.avatar_url) {
@@ -169,15 +169,15 @@ const removeAvatar = async (userId: string): Promise<boolean> => {
     let deleteSuccess = false;
 
     try {
-      // url 에 파일명을 찾아야 함 (url로 변환하면 path 와 파일구분 수월함)
+      // url 에 파일명을 찾아야 함. (url 로 변환하면 path 와 파일구분 수월함)
       const url = new URL(profile.avatar_url);
       const pathParts = url.pathname.split('/');
       const publicIndex = pathParts.indexOf('public');
       if (publicIndex !== -1 && publicIndex + 1 < pathParts.length) {
         const bucketName = pathParts[publicIndex + 1];
         const filePath = pathParts.slice(publicIndex + 2).join('/');
-        // 실제로 찾아낸 bucketName 과 filePath 로 삭제
-        const { data, error } = await supabase.storage.from('user-images').remove([filePath]);
+        // 실제로 찾아낸 bucketName 과  filePath 로 삭제
+        const { data, error } = await supabase.storage.from(bucketName).remove([filePath]);
         if (error) {
           throw new Error('파일을 찾았지만, 삭제에는 실패했어요.');
         }
@@ -191,10 +191,11 @@ const removeAvatar = async (userId: string): Promise<boolean> => {
     // 2. 만약 avatar_url 을 제대로 파싱 못했다면?
     if (!deleteSuccess) {
       try {
-        // 전체 목록을 일단 읽어옴
+        // 전체 목록을 일단 읽어옴.
         const { data: files, error: listError } = await supabase.storage
           .from('user-images')
           .list('avatars', { limit: 1000 });
+
         if (!listError && files && files.length > 0) {
           const userFiles = files.filter(item => item.name.startsWith(`${userId}-`));
           if (userFiles.length > 0) {
@@ -209,6 +210,7 @@ const removeAvatar = async (userId: string): Promise<boolean> => {
         console.log(error);
       }
     }
+
     return true;
   } catch (error) {
     console.log(error);

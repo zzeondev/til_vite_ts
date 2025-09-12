@@ -6,6 +6,7 @@ type TodoListProps = {};
 
 const TodoList = ({}: TodoListProps): JSX.Element => {
   const { todos } = useTodos();
+
   return (
     <div>
       <h2>TodoList</h2>

@@ -10,8 +10,9 @@ function AdminPage() {
   const [deleteRequests, setDeleteRequests] = useState<DeleteRequest[]>([]);
   // 로딩창
   const [loading, setLoading] = useState(true);
+
   // 관리자 확인
-  const isAdmin = user?.email === 'wldjsjiun@naver.com';
+  const isAdmin = user?.email === 'tarolong@naver.com';
   useEffect(() => {
     console.log(user?.email);
     console.log(user?.id);
@@ -48,7 +49,6 @@ function AdminPage() {
       setLoading(false);
     }
   };
-
   // 탈퇴 승인
   const approveDelete = async (id: string, updateUser: DeleteRequestUpdate): Promise<void> => {
     try {
@@ -60,7 +60,9 @@ function AdminPage() {
         console.log(`탈퇴 업데이트 오류 : ${error.message}`);
         return;
       }
+
       alert(`사용자 ${id}의 계정이 삭제가 승인되었습니다. \n\n 관리자님 수동으로 삭제하세요.`);
+
       // 목록 다시 읽기
       loadDeleteMember();
     } catch (err) {
@@ -75,11 +77,14 @@ function AdminPage() {
         .from('account_deletion_requests')
         .update({ ...updateUser, status: 'rejected' })
         .eq('id', id);
+
       if (error) {
         console.log(`탈퇴 업데이트 오류 : ${error.message}`);
         return;
       }
+
       alert(`사용자 ${id}의 계정이 삭제가 거부되었습니다.`);
+
       // 목록 다시 읽기
       loadDeleteMember();
     } catch (err) {
@@ -96,7 +101,6 @@ function AdminPage() {
       </div>
     );
   }
-
   // 2. 로딩중 이라면
   if (loading) {
     return <div>로딩중...</div>;
@@ -107,15 +111,16 @@ function AdminPage() {
     <div>
       <h1>관리자 페이지</h1>
       <div>
-        {' '}
         {deleteRequests.length === 0 ? (
           <p>대기 중인 삭제 요청이 없습니다.</p>
         ) : (
           <div>
             {deleteRequests.map(item => (
               <div key={item.id}>
-                <h3>사용자 : {item.user_email}</h3>
-                <span>대기중</span>
+                <div>
+                  <h3>사용자: {item.user_email}</h3>
+                  <span>대기 중</span>
+                </div>
                 <div>
                   <p>사용자 ID : {item.user_id}</p>
                   <p>요청시간 : {item.requested_at}</p>

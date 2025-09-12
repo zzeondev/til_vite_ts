@@ -13,7 +13,7 @@ function GoodsPage() {
   };
   return (
     <div style={box}>
-      <h2>🎁 판매 제품 리스트</h2>
+      <h2>😎 판매 제품 리스트</h2>
       <div>
         <GoodList />
         <Cart />

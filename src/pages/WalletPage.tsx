@@ -1,5 +1,5 @@
 import React from 'react';
-import Wallet from '../components/shop/Wallet';
+import { Wallet } from '../components/shop/Wallet';
 
 function WalletPage() {
   const box: React.CSSProperties = {

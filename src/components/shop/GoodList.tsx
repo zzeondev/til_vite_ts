@@ -2,7 +2,7 @@ import React from 'react';
 import { useShop } from '../../features/shop';
 
 const GoodList = () => {
-  // ts
+  // ts 자리
   const { goods, addCart } = useShop();
 
   const box: React.CSSProperties = {
@@ -19,11 +19,10 @@ const GoodList = () => {
     padding: '8px 0',
     borderBottom: '1px solid #eee',
   };
-
-  // tsx
+  // tsx 자리
   return (
     <div style={box}>
-      <h2>🏬GoodList</h2>
+      <h2>🎉 GoodList</h2>
       <ul style={{ padding: 0, margin: 0 }}>
         {goods.map(item => (
           <li key={item.id} style={boxrow}>

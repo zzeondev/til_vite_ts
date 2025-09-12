@@ -19,14 +19,13 @@ const initialState: ShopStateType = {
     { id: 1, name: '사과', price: 1000 },
     { id: 2, name: '딸기', price: 30000 },
     { id: 3, name: '바나나', price: 500 },
-    { id: 4, name: '초콜릿', price: 8000 },
+    { id: 4, name: '초코렛', price: 8000 },
   ],
 };
-
 // 2. 리듀서
 enum ShopActionType {
   ADD_CART = 'ADD_CART',
-  REMOVE_CART_ONE = 'REMOVE_CART_ONE',
+  REMOVE_CART_ONE = 'REMOVE_CART',
   CLEAR_CART_ITEM = 'CLEAR_CART',
   BUY_ALL = 'BUY_ALL',
   RESET = 'RESET',
@@ -40,10 +39,10 @@ type ShopAction =
   | ShopActionAddCart
   | ShopActionRemoveCart
   | ShopActionClearCart
-  | ShopActionBuyAll
-  | ShopActionReset;
+  | ShopActionReset
+  | ShopActionBuyAll;
 
-// 장바구니 전체 금액 계산하기
+// 장바구니 전체 금액계산하기
 // 총액 계산 함수 (state 대신 cart, goods만 받도록)
 function calcTotal(cart: CartType[], goods: GoodType[]): number {
   return cart.reduce((sum, c) => {
@@ -68,14 +67,16 @@ function reducer(state: ShopStateType, action: ShopAction) {
       }
       return { ...state, cart: arr };
     }
-
     case ShopActionType.REMOVE_CART_ONE: {
-      const { id } = action.payload; // 제품의 ID
+      const { id } = action.payload; // 1개 빼줄 제품의 ID
+      // id 제품이 배열에 있는가? qty 가 있는가?
       const existGood = state.cart.find(item => item.id === id);
+
       if (!existGood) {
-        // 제품이 없다면..
+        // 제품이 없다면...
         return state;
       }
+
       let arr: CartType[] = [];
       if (existGood.qty > 1) {
         // 제품이 최소 2개 이상이면
@@ -87,14 +88,12 @@ function reducer(state: ShopStateType, action: ShopAction) {
 
       return { ...state, cart: arr };
     }
-
     case ShopActionType.CLEAR_CART_ITEM: {
-      // 장바구니에 담긴 제품 제거하기
+      // 담겨진 제품 중에 장바구니에서 제거하기
       const { id } = action.payload;
       const arr = state.cart.filter(item => item.id !== id);
       return { ...state, cart: arr };
     }
-
     case ShopActionType.BUY_ALL: {
       // 총 금액계산
       const total = calcTotal(state.cart, state.goods);
@@ -104,14 +103,12 @@ function reducer(state: ShopStateType, action: ShopAction) {
       }
       return { ...state, balance: state.balance - total, cart: [] };
     }
-
     case ShopActionType.RESET:
       return initialState;
     default:
       return state;
   }
 }
-
 // 3. 컨텍스트 생성
 type ShopValueType = {
   cart: CartType[];
@@ -124,7 +121,6 @@ type ShopValueType = {
   resetCart: () => void;
 };
 const ShopContext = createContext<ShopValueType | null>(null);
-
 // 4. 프로바이더
 export const ShopProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -158,8 +154,7 @@ export const ShopProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   };
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 };
-
-// 5. 커스텀 훌
+// 5. 커스텀 훅
 export function useShop() {
   const ctx = useContext(ShopContext);
   if (!ctx) {
@@ -167,13 +162,12 @@ export function useShop() {
   }
   return ctx;
 }
-
 // 6. 추가 커스텀 훅 : 상품 찾기, 총액
 export function useShopSelectors() {
   const { goods, cart } = useShop();
-  // 제품 한 개 정보 찾기
+  // 제품 한개 정보 찾기
   const getGood = (id: number) => goods.find(item => item.id === id);
-  // 충 금액
+  // 총 금액
   const total = calcTotal(cart, goods);
   // 리턴
   return { getGood, total };

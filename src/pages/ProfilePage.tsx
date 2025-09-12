@@ -79,7 +79,7 @@ function ProfilePage() {
       let imgUrl = originalAvatarUrl; // 원본 이미지 URL
       // 아바타이미지 제거라면
       if (imageRemovalRequest) {
-        // storage 에 실제 이미지를 제거함
+        // storage 에 실제 이미지를 제거함.
         const success = await removeAvatar(user.id);
         if (success) {
           imgUrl = null;
@@ -90,7 +90,7 @@ function ProfilePage() {
         // 새로운 이미지가 업로드 된다면
         const uploadedImageUrl = await uploadAvatar(selectedFile, user.id);
         if (uploadedImageUrl) {
-          // 실제로 업로드 완료 후 전달받은 URL 문자열을 보관함
+          // 실제로 업로드 완료 후 전달받은 URL 문자열을 보관함.
           // profiles 테이블에 avatar_url 에 넣어줄 문자열
           imgUrl = uploadedImageUrl;
         } else {
@@ -114,7 +114,6 @@ function ProfilePage() {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-
       await loadProfile();
       alert('프로필이 성공적으로 업데이트 되었습니다.');
     } catch (err) {
@@ -182,7 +181,7 @@ function ProfilePage() {
       return;
     }
     // 즉시 제거하지 않습니다.
-    // 제거하라는 상태만 별도로 관리함
+    // 제거하라는 상태만 별도로 관리함.
     setImageRemovalReauest(true);
     setPreviewImage(null);
     setSelectedFile(null);
@@ -306,7 +305,7 @@ function ProfilePage() {
             <div>
               <h4>아바타</h4>
               {profileData?.avatar_url ? (
-                <img style={{ width: 200, height: 200 }} src={profileData.avatar_url} />
+                <img src={profileData.avatar_url} />
               ) : (
                 <div>기본이미지</div>
               )}
