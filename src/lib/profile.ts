@@ -15,11 +15,17 @@ import { supabase } from './supabase';
 // 사용자 프로필 생성
 const createProfile = async (newUserProfile: ProfileInsert): Promise<boolean> => {
   try {
-    const { error } = await supabase.from('profiles').insert([{ ...newUserProfile }]);
+    const { error, data } = await supabase.from('profiles').insert([{ ...newUserProfile }]);
     if (error) {
-      console.log(`프로필 추가에 실패 : ${error.message}`);
+      console.log(`프로필 추가에 실패 : `, {
+        message: error.message,
+        detail: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
       return false;
     }
+    console.log(`프로필 생성 성공 : `, data);
     return true;
   } catch (error) {
     console.log(`프로필 생성 오류 : ${error}`);

@@ -9,10 +9,14 @@ import {
 
 type TodoItemProps = {
   todo: Todo;
+  index: number;
 };
 
-const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
-  const { toggleTodo, editTodo, deleteTodo } = useTodos();
+const TodoItem = ({ todo, index }: TodoItemProps): JSX.Element => {
+  const { toggleTodo, editTodo, deleteTodo, currentPage, itemsPerPage, totalCount } = useTodos();
+  // 순서번호 매기기
+  const globalIndex = totalCount - ((currentPage - 1) * itemsPerPage + index);
+
   // 수정중인지
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editTitle, setEditTitle] = useState<string>(todo.title);
@@ -78,6 +82,7 @@ const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
 
   return (
     <li>
+      {globalIndex}
       {isEdit ? (
         <>
           <input
