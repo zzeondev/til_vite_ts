@@ -26,7 +26,7 @@ type InfiniteScrollState = {
 };
 const initialState: InfiniteScrollState = {
   todos: [],
-  hasMore: false,
+  hasMore: true,
   totalCount: 0,
   loading: false,
   loadingMore: false,
@@ -106,7 +106,7 @@ function reducer(state: InfiniteScrollState, action: InfiniteScrollAction): Infi
       // 추가
       return {
         ...state,
-        todos: [...action.payload.todos, ...state.todos],
+        todos: [...state.todos, ...action.payload.todos],
         hasMore: action.payload.hasMore,
         loadingMore: false,
       };
@@ -127,6 +127,7 @@ function reducer(state: InfiniteScrollState, action: InfiniteScrollAction): Infi
       return {
         ...state,
         todos: state.todos.filter(item => item.id !== action.payload.id),
+        totalCount: Math.max(0, state.totalCount - 1),
       };
 
     case InfiniteScrollActionType.EDIT_TODO:
@@ -207,6 +208,11 @@ export const InfiniteScrollProvider: React.FC<InfiniteScrollProviderProps> = ({
 
   // 데이터 더 보기 기능
   const loadMoreTodos = async (): Promise<void> => {
+    // 이미 로딩 중이거나 더 이상 불러올 데이터가 없으면 중단
+    if (state.loadingMore || !state.hasMore) {
+      return;
+    }
+
     try {
       dispatch({ type: InfiniteScrollActionType.SET_LOADING_MORE, payload: true });
       const result = await getTodosInfinite(state.todos.length, itemsPerPage);
@@ -220,6 +226,7 @@ export const InfiniteScrollProvider: React.FC<InfiniteScrollProviderProps> = ({
         })),
       );
 
+      // 데이터가 실제로 로드되었을 때만 상태 업데이트
       dispatch({
         type: InfiniteScrollActionType.APPEND_TODOS,
         payload: { todos: result.todos, hasMore: result.hasMore },
