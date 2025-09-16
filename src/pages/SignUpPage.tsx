@@ -64,33 +64,64 @@ function SignUpPage() {
 
   return (
     <div>
-      <h2>Todo 서비스 회원가입</h2>
-      <div>
+      <div className="page-header">
+        <h2 className="page-title">회원가입</h2>
+        <p className="page-subtitle">새 계정을 만들어 보세요.</p>
+      </div>
+      <div className="card" style={{ maxWidth: '400px', margin: '0 auto' }}>
         <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="이메일"
-          />
-          <br />
-          <input
-            type="password"
-            value={pw}
-            onChange={e => setPw(e.target.value)}
-            placeholder="비밀번호"
-          />
-          <br />
-          <input
-            type="text"
-            value={nickName}
-            onChange={e => setNickName(e.target.value)}
-            placeholder="닉네임"
-          />
-          <br />
-          <button type="submit">회원가입</button>
+          <div className="form-group">
+            <label className="form-label">이메일</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="이메일"
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">비밀번호</label>
+            <input
+              type="password"
+              value={pw}
+              onChange={e => setPw(e.target.value)}
+              placeholder="비밀번호 (최소 6자)"
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">닉네임</label>
+            <input
+              type="text"
+              value={nickName}
+              onChange={e => setNickName(e.target.value)}
+              placeholder="닉네임을 입력하세요."
+              className="form-input"
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-success btn-lg" style={{ width: '100%' }}>
+            회원가입
+          </button>
         </form>
-        <p>{msg}</p>
+        {/* 메시지 출력 */}
+        {msg && (
+          <p
+            style={{
+              marginTop: 'var(--space-4)',
+              padding: 'var(--space-3)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: msg.includes('성공') ? 'var(--success-50)' : '#fef2f2',
+              color: msg.includes('성공') ? 'var(--success-600)' : '#dc2626',
+              border: `1px solid ${msg.includes('성공') ? 'var(--success-600)' : '#dc2626'}`,
+            }}
+          >
+            {msg}
+          </p>
+        )}
       </div>
     </div>
   );

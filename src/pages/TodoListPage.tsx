@@ -1,20 +1,78 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getProfile } from '../lib/profile';
+import type { Profile, Todo } from '../types/TodoType';
 import { TodoProvider, useTodos } from '../contexts/TodoContext';
 import TodoWrite from '../components/todos/TodoWrite';
 import TodoList from '../components/todos/TodoList';
-import type { Profile } from '../types/TodoType';
-import { useAuth } from '../contexts/AuthContext';
-import { getProfile } from '../lib/profile';
 import Pagination from '../components/Pagination';
+import TodoWriteBox from '../components/todos/TodoWriteBox';
+import { Link } from 'react-router-dom';
 
-// 컴포넌트 작성
-// 필요시 이동
+// 추후 컨포넌트로 빼기
+type TodoItemProps = {
+  todo: Todo;
+  index: number;
+};
+const TodoItemBox = ({ todo, index }: TodoItemProps) => {
+  const { toggleTodo, editTodo, deleteTodo, currentPage, itemsPerPage, totalCount } = useTodos();
+
+  // 순서번호 매기기
+  const globalIndex = totalCount - ((currentPage - 1) * itemsPerPage + index);
+
+  // 작성 날짜 포맷팅
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return '날짜 없음';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  return (
+    <li className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+      {/* 출력 번호 */}
+      <span className="todo-number">{globalIndex}</span>
+      <div className="todo-content">
+        <Link
+          to={`/todos/detail/${todo.id}`}
+          className={`todo-title ${todo.completed ? 'completed' : ''}`}
+          style={{ cursor: 'pointer' }}
+        >
+          {todo.title}
+        </Link>
+        <span className="todo-date">작성일: {formatDate(todo.created_at)}</span>
+      </div>
+    </li>
+  );
+};
+
+// 추후 컨포넌트로 빼기
+const TodoListBox = () => {
+  const { user } = useAuth();
+  // 전체 할일 목록 가져오기
+  const { todos } = useTodos();
+  return (
+    <ul className="toto-list">
+      {todos.map((item, index) => (
+        <TodoItemBox key={item.id} todo={item} index={index} />
+      ))}
+    </ul>
+  );
+};
+
 interface TodosContentProps {
+  profile: Profile | null;
   currentPage: number;
   itemsPerPage: number;
   handleChangePage: (page: number) => void;
 }
 const TodosContent = ({
+  profile,
   currentPage,
   itemsPerPage,
   handleChangePage,
@@ -24,10 +82,10 @@ const TodosContent = ({
     <div>
       <div>
         {/* 새글 등록시 1페이지로 이동후 목록새로고침 */}
-        <TodoWrite handleChangePage={handleChangePage} />
+        <TodoWriteBox profile={profile} />
       </div>
       <div>
-        <TodoList />
+        <TodoListBox />
       </div>
       <div>
         <Pagination
@@ -42,20 +100,19 @@ const TodosContent = ({
   );
 };
 
-function TodosPage() {
+function TodoListPage() {
   const { user } = useAuth();
 
   // 페이지네이션 관련
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  // const itemsPerPage = 10;
   // 페이지 변경 핸들러
   const handleChangePage = (page: number) => {
     setCurrentPage(page);
   };
 
-  const [profile, setProfile] = useState<Profile | null>(null);
   // 프로필 가져오기
+  const [profile, setProfile] = useState<Profile | null>(null);
   const loadProfile = async () => {
     try {
       if (user?.id) {
@@ -83,6 +140,7 @@ function TodosPage() {
 
       <TodoProvider currentPage={currentPage} limit={itemsPerPage}>
         <TodosContent
+          profile={profile}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
           handleChangePage={handleChangePage}
@@ -92,4 +150,4 @@ function TodosPage() {
   );
 }
 
-export default TodosPage;
+export default TodoListPage;

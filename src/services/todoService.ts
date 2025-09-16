@@ -13,6 +13,19 @@ export const getTodos = async (): Promise<Todo[]> => {
   }
   return data || [];
 };
+// Todo 목록 조회 (id) 를 이용함
+export const getTodoById = async (id: number): Promise<Todo | null> => {
+  try {
+    const { data, error } = await supabase.from('todos').select('*').eq('id', id).single();
+    if (error) {
+      throw new Error(`getTodoById 오류 : ${error.message}`);
+    }
+    return data;
+  } catch (err) {
+    console.log('getTodoById 에러 : ', err);
+    return null;
+  }
+};
 
 // Todo 생성
 // 로그인을 하고 나면 실제로 user_id 가 이미 파악이 됨

@@ -1,14 +1,17 @@
 import { Link, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import HomePage from './pages/HomePage';
-import SignUpPage from './pages/SignUpPage';
-import SignInPage from './pages/SignInPage';
-import TodosPage from './pages/TodosPage';
-import AuthCallback from './pages/AuthCallback';
 import Protected from './components/Protected';
-import ProfilePage from './pages/ProfilePage';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminPage from './pages/AdminPage';
+import AuthCallback from './pages/AuthCallback';
+import HomePage from './pages/HomePage';
+import ProfilePage from './pages/ProfilePage';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import TodoDetailPage from './pages/TodoDetailPage';
+import TodoEditPage from './pages/TodoEditPage';
+import TodoListPage from './pages/TodoListPage';
 import TodosInfinitePage from './pages/TodosInfinitePage';
+import TodoWritePage from './pages/TodoWritePage';
 
 const TopBar = () => {
   const { signOut, user } = useAuth();
@@ -17,16 +20,46 @@ const TopBar = () => {
   const isAdmin = user?.email === 'tarolong@naver.com';
 
   return (
-    <nav style={{ display: 'flex', gap: 20, justifyContent: 'flex-end', padding: 40 }}>
-      <Link to="/">홈</Link>
-      {user && <Link to="/todos">할일</Link>}
-      {user && <Link to="/todos-infinite">무한스크롤 할일</Link>}
-      {!user && <Link to="/signup">회원가입</Link>}
-      {!user && <Link to="/signin">로그인</Link>}
-      {user && <Link to="/profile">프로필</Link>}
-      {user && <button onClick={signOut}>로그아웃</button>}
+    <nav className="nav">
+      <Link to="/" className="nav-link">
+        홈
+      </Link>
+      {user && (
+        <Link to="/todos" className="nav-link">
+          할일
+        </Link>
+      )}
+      {user && (
+        <Link to="/todos-infinite" className="nav-link">
+          무한스크롤 할일
+        </Link>
+      )}
+      {!user && (
+        <Link to="/signup" className="nav-link">
+          회원가입
+        </Link>
+      )}
+      {!user && (
+        <Link to="/signin" className="nav-link">
+          로그인
+        </Link>
+      )}
+      {user && (
+        <Link to="/profile" className="nav-link">
+          프로필
+        </Link>
+      )}
+      {user && (
+        <button onClick={signOut} className="btn btn-secondary btn-sm">
+          로그아웃
+        </button>
+      )}
 
-      {isAdmin && <Link to="/admin">관리자</Link>}
+      {isAdmin && (
+        <Link to="/admin" className="nav-link">
+          관리자
+        </Link>
+      )}
     </nav>
   );
 };
@@ -34,8 +67,10 @@ const TopBar = () => {
 function App() {
   return (
     <AuthProvider>
-      <div>
-        <h1>Todo Service</h1>
+      <div className="container">
+        <div className="page-header">
+          <h1 className="page-title">⚾ Todo Service</h1>
+        </div>
         <Router>
           <TopBar />
           <Routes>
@@ -47,7 +82,31 @@ function App() {
               path="/todos"
               element={
                 <Protected>
-                  <TodosPage />
+                  <TodoListPage />
+                </Protected>
+              }
+            />
+            <Route
+              path="/todos/write"
+              element={
+                <Protected>
+                  <TodoWritePage />
+                </Protected>
+              }
+            />
+            <Route
+              path="/todos/edit/:id"
+              element={
+                <Protected>
+                  <TodoEditPage />
+                </Protected>
+              }
+            />
+            <Route
+              path="/todos/detail/:id"
+              element={
+                <Protected>
+                  <TodoDetailPage />
                 </Protected>
               }
             />

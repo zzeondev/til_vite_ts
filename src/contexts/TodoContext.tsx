@@ -46,7 +46,11 @@ function reducer(
   switch (action.type) {
     case TodoActionType.ADD: {
       const { todo } = action.payload;
-      return { ...state, todos: [todo, ...state.todos] };
+      return {
+        ...state,
+        todos: [todo, ...state.todos],
+        totalCount: state.totalCount + 1, // 새 항목 추가시 전체 개수 증가
+      };
     }
     case TodoActionType.TOGGLE: {
       const { id } = action.payload;
@@ -55,17 +59,23 @@ function reducer(
       );
       return { ...state, todos: arr };
     }
+
     case TodoActionType.DELETE: {
       const { id } = action.payload;
       const arr = state.todos.filter(item => item.id !== id);
-      return { ...state, todos: arr };
+      return {
+        ...state,
+        todos: arr,
+        totalCount: Math.max(0, state.totalCount - 1), // 항목 삭제 시 전체 개수 감소 (0이하로는 내려가지 않음)
+      };
     }
+
     case TodoActionType.EDIT: {
       const { id, title } = action.payload;
       const arr = state.todos.map(item => (item.id === id ? { ...item, title } : item));
       return { ...state, todos: arr };
     }
-    // Supabase 에 목록 읽기
+    // Supabase에 목록 읽기
     case TodoActionType.SET_TODOS: {
       const { todos, totalCount, totalPages, currentPage } = action.payload;
       return { ...state, todos, totalCount, totalPages, currentPage };
@@ -74,6 +84,7 @@ function reducer(
       return state;
   }
 }
+
 // 3. context 생성
 //  만들어진 Context 가 관리하는 Value 의 모양
 type TodoContextValue = {
