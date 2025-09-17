@@ -660,3 +660,278 @@ textarea:focus {
   background-color: #4682b4 !important;
   color: #fff !important;
 }
+
+/* ===== React Quill Styles ===== */
+/* 텍스트 정렬 */
+.ql-align-center {
+  text-align: center !important;
+}
+.ql-align-right {
+  text-align: right !important;
+}
+.ql-align-justify {
+  text-align: justify !important;
+}
+.ql-align-left {
+  text-align: left !important;
+}
+
+/* 헤더 스타일 */
+.ql-size-small {
+  font-size: 0.75em !important;
+}
+.ql-size-large {
+  font-size: 1.5em !important;
+}
+.ql-size-huge {
+  font-size: 2.5em !important;
+}
+
+/* 헤더 태그 */
+.ql-editor h1 {
+  font-size: 2em !important;
+  font-weight: bold !important;
+  margin: 0.67em 0 !important;
+}
+.ql-editor h2 {
+  font-size: 1.5em !important;
+  font-weight: bold !important;
+  margin: 0.75em 0 !important;
+}
+.ql-editor h3 {
+  font-size: 1.17em !important;
+  font-weight: bold !important;
+  margin: 0.83em 0 !important;
+}
+
+/* 텍스트 서식 */
+.ql-editor strong {
+  font-weight: bold !important;
+}
+.ql-editor em {
+  font-style: italic !important;
+}
+.ql-editor u {
+  text-decoration: underline !important;
+}
+.ql-editor s {
+  text-decoration: line-through !important;
+}
+
+/* 목록 스타일 */
+.ql-editor ul {
+  list-style-type: disc !important;
+  margin: 1em 0 !important;
+  padding-left: 1.5em !important;
+}
+.ql-editor ol {
+  list-style-type: decimal !important;
+  margin: 1em 0 !important;
+  padding-left: 1.5em !important;
+}
+.ql-editor li {
+  display: list-item !important;
+  margin: 0.5em 0 !important;
+}
+
+/* 들여쓰기 */
+.ql-indent-1 {
+  padding-left: 3em !important;
+}
+.ql-indent-2 {
+  padding-left: 6em !important;
+}
+.ql-indent-3 {
+  padding-left: 9em !important;
+}
+.ql-indent-4 {
+  padding-left: 12em !important;
+}
+.ql-indent-5 {
+  padding-left: 15em !important;
+}
+.ql-indent-6 {
+  padding-left: 18em !important;
+}
+.ql-indent-7 {
+  padding-left: 21em !important;
+}
+.ql-indent-8 {
+  padding-left: 24em !important;
+}
+
+/* 링크 스타일 */
+.ql-editor a {
+  color: #06c !important;
+  text-decoration: underline !important;
+}
+.ql-editor a:hover {
+  color: #0056b3 !important;
+}
+
+/* 이미지 스타일 */
+.ql-editor img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  margin: 0.5em auto !important;
+}
+
+/* 인용문 스타일 */
+.ql-editor blockquote {
+  border-left: 4px solid #ccc !important;
+  margin: 1em 0 !important;
+  padding-left: 1em !important;
+  color: #666 !important;
+  font-style: italic !important;
+}
+
+/* 코드 스타일 */
+.ql-editor code {
+  background-color: #f4f4f4 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 3px !important;
+  padding: 2px 4px !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 0.9em !important;
+}
+
+.ql-editor pre {
+  background-color: #f4f4f4 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 3px !important;
+  padding: 1em !important;
+  margin: 1em 0 !important;
+  overflow-x: auto !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 0.9em !important;
+}
+
+.ql-editor pre code {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* 구분선 */
+.ql-editor hr {
+  border: none !important;
+  border-top: 1px solid #ccc !important;
+  margin: 1em 0 !important;
+}
+
+/* 문단 스타일 */
+.ql-editor p {
+  margin: 0.5em 0 !important;
+  line-height: 1.6 !important;
+}
+
+/* 에디터 컨테이너 */
+.ql-editor {
+  font-family: inherit !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: inherit !important;
+}
+
+/* 선택된 텍스트 스타일 */
+.ql-editor::selection {
+  background-color: #b3d4fc !important;
+}
+
+/* 포커스 스타일 */
+.ql-editor:focus {
+  outline: none !important;
+}
+
+/* ===== PagiNation Styles ===== */
+.pagination-container {
+  display: 'flex';
+  align-items: 'center';
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+.pagination-info {
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+.pagination-count {
+  font-weight: 600;
+  color: var(--gray-600);
+}
+.pagination-range {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+.pagination-controls {
+  display: flex;
+  align-self: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--gray-300);
+  background-color: #fff;
+  color: var(--gray-700);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.pagination-btn:hover {
+  background-color: var(--primary-50);
+  border-color: var(--primary-300);
+  color: var(--primary-700);
+  box-shadow: var(--shadow-sm);
+}
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--gray-100);
+  color: var(--gray-400);
+}
+.pagination-numbers {
+  display: flex;
+  gap: var(--space-1);
+}
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  color: var(--gray-500);
+  font-weight: 600;
+  font-size: 16px;
+}
+/* 현재 페이지일 때 버튼 */
+.pagination-btn-number.active {
+  background-color: var(--primary-500);
+  border-color: var(--primary-500);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.pagination-btn-number.active:hover {
+  background-color: var(--primary-600);
+  border-color: var(--primary-600);
+}
+/* 반응형 */
+@media screen and (max-width: 768px) {
+  .pagination-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1);
+  }
+  .pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+}

@@ -74,29 +74,45 @@ const Pagination = ({
 
   // tsx 자리
   return (
-    <div>
+    <div className="pagination-container">
       {/* 페이지 정보 */}
-      <div>
-        총 {totalCount}개 중 {startItem} ~ {endItem} 개 표시
+      <div className="pagination-info">
+        총 <span className="pagination-count">{totalCount}</span>개 중{' '}
+        <span className="pagination-range">
+          {startItem} ~ {endItem}
+        </span>
+        개 표시
       </div>
       {/* 페이지 번호들 */}
-      <div>
-        <button onClick={() => handleChangePage(currentPage - 1)} disabled={currentPage === 1}>
+      <div className="pagination-controls">
+        <button
+          className="pagination-btn"
+          onClick={() => handleChangePage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
           이전
         </button>
 
         {/* 버튼들 출력 */}
-        {pageNumbers.map((item, index) => (
-          <React.Fragment key={index}>
-            {item === '...' ? (
-              <span>...</span>
-            ) : (
-              <button onClick={() => handleChangePage(item as number)}>{item}</button>
-            )}
-          </React.Fragment>
-        ))}
+        <div className="pagination-numbers">
+          {pageNumbers.map((item, index) => (
+            <React.Fragment key={index}>
+              {item === '...' ? (
+                <span className="pagination-ellipsis">...</span>
+              ) : (
+                <button
+                  className={`pagination-btn pagination-btn-number ${item === currentPage ? 'active' : ''}`}
+                  onClick={() => handleChangePage(item as number)}
+                >
+                  {item}
+                </button>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
 
         <button
+          className="pagination-btn"
           onClick={() => handleChangePage(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
