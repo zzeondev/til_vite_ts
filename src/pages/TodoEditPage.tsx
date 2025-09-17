@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Profile, Todo } from '../types/TodoType';
 import { getProfile } from '../lib/profile';
-import { getTodoById } from '../services/todoService';
+import { getTodoById, toggleTodo, updateTodo } from '../services/todoService';
 import Loading from '../components/Loading';
 
 function TodoEditPage() {
@@ -70,6 +70,67 @@ function TodoEditPage() {
     loadTodo();
   }, [id, user?.id, navigate]);
 
+  const handleToggle = async () => {
+    if (!todo) return;
+    try {
+      setToggleLoading(true);
+      const result = await toggleTodo(todo.id, !todo.completed);
+      if (result) {
+        setTodo(result);
+        alert(`할 일이 ${result.completed ? '완료' : '진행 중'}으로 변경되었습니다.`);
+      } else {
+        alert('오류가 발생하였습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    } catch (error) {
+      console.log('상태 변경 실패 : ', error);
+      alert('에러가 발생하였습니다.');
+    } finally {
+      setToggleLoading(false);
+    }
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+  };
+
+  const handleSave = async () => {
+    if (!todo) return;
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
+    }
+    try {
+      setSaving(true);
+      const result = await updateTodo(todo.id, { title, content });
+      if (result) {
+        alert('할 일이 성공적으로 수정되었습니다.');
+        navigate('/todos');
+      } else {
+        alert('수정 중 오류가 발생하였습니다. 잠시 후 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.log('수정 실패 : ', error);
+      alert('수정에 실패하였습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancle = () => {
+    // 바로 취소하지 않음
+    if (title !== todo?.title || content !== (todo?.content || '')) {
+      if (window.confirm('수정 중인 내용이 있습니다. 정말 취소하시겠습니까?')) {
+        navigate('/todos');
+      }
+    } else {
+      navigate('/todos');
+    }
+  };
+
   if (loading) {
     return <Loading message="할 일 정보를 불러오는 중 ..." size="lg" />;
   }
@@ -97,6 +158,7 @@ function TodoEditPage() {
           <div>
             <input
               type="checkbox"
+              onChange={handleToggle}
               checked={todo.completed}
               disabled={toggleLoading || saving}
               style={{
@@ -105,7 +167,7 @@ function TodoEditPage() {
                 opacity: toggleLoading || saving ? 0.6 : 1,
               }}
             />
-            <span>{todo.completed ? '✅ 완료됨' : '⏳ 진행 중'}</span>
+            <span>{todo.completed ? ' ✅ 완료됨' : ' ⏳ 진행 중'}</span>
             {toggleLoading && (
               <span style={{ color: 'var(--gray-500)', fontSize: '14px' }}>처리 중...</span>
             )}
@@ -116,6 +178,7 @@ function TodoEditPage() {
           <input
             type="text"
             className="form-input"
+            onChange={handleTitleChange}
             value={title}
             disabled={saving}
             placeholder="할 일을 입력하세요."
@@ -125,6 +188,7 @@ function TodoEditPage() {
           <label className="form-label">상세 내용</label>
           <textarea
             className="form-input"
+            onChange={handleContentChange}
             value={content}
             rows={6}
             placeholder="상세 내용을 입력하세요.(선택사항)"
@@ -170,10 +234,18 @@ function TodoEditPage() {
         </div>
         {/* 버튼 */}
         <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
-          <button className="btn btn-secondary" disabled={saving || toggleLoading}>
+          <button
+            className="btn btn-secondary"
+            disabled={saving || toggleLoading}
+            onClick={handleCancle}
+          >
             취소
           </button>
-          <button className="btn btn-secondary" disabled={saving || toggleLoading}>
+          <button
+            className="btn btn-secondary"
+            disabled={saving || toggleLoading}
+            onClick={handleSave}
+          >
             {saving ? '⏳ 수정 중...' : '수정'}
           </button>
         </div>
