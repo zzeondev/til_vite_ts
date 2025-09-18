@@ -75,7 +75,6 @@ function TodoWritePage() {
           try {
             // 파일명을 생성한다.
             const timestamp = Date.now() + i; // 각 이미지 마다 다른 시간 글자
-            // todo-images 저장소 폴더명생성 / 파일명 생성
 
             // 한글 파일명 또는 특수 기호 처리
             const goodFileName = (filename: string) => {
@@ -112,7 +111,6 @@ function TodoWritePage() {
             const safeFileName = goodFileName(imageFile.name);
             // todo-images 저장소 폴더명 생성 / 파일명 생성
             const fileName = `${user!.id}_${timestamp}_${safeFileName}`;
-
             const filePath = `${user!.id}/${fileName}`;
             // supabase에 실제로 업로드
             // 폴더가 있으면 재활용, 없으면 자동 생성
