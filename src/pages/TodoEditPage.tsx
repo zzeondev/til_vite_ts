@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Profile, Todo } from '../types/TodoType';
@@ -6,6 +6,7 @@ import { getProfile } from '../lib/profile';
 import { getTodoById, toggleTodo, updateTodo } from '../services/todoService';
 import Loading from '../components/Loading';
 import RichTextEditor from '../components/RichTextEditor';
+import { supabase } from '../lib/supabase';
 
 function TodoEditPage() {
   const { user } = useAuth();
@@ -20,6 +21,13 @@ function TodoEditPage() {
   const [saving, setSaving] = useState(false);
   // 토글 처리
   const [toggleLoading, setToggleLoading] = useState(false);
+
+  // 이미지 파일 보관
+  const [imgaeFiles, setImageFiles] = useState<File[]>([]);
+  // 이미지 파일 보관용 업데이트
+  const handleImageChange = useCallback((images: File[]) => {
+    setImageFiles(images);
+  }, []);
 
   // 사용자 정보
   useEffect(() => {
@@ -100,6 +108,7 @@ function TodoEditPage() {
   const handleContentChange = (value: string) => {
     setContent(value);
   };
+  // 아래는 파일도 저장하도록 업데이트
   const handleSave = async () => {
     if (!todo) return;
     if (!title.trim()) {
@@ -108,7 +117,88 @@ function TodoEditPage() {
     }
     try {
       setSaving(true);
-      const result = await updateTodo(todo.id, { title, content });
+
+      // 파일 업데이트 처리
+      // 1. 기존의 content 내용을 보관
+      // <img src="blob:~~" /> 새로 업로드 한 이미지인 경우
+      // <img src="http://~" /> 기존의 storage 에 있는 경우
+      let finalContent = content;
+
+      // 2. blob 파일이 존재한다면
+      if (imgaeFiles.length > 0) {
+        // 모든 blob: 글자를 찾습니다.
+        const blobUrlPattern = /blob:[^"'\s]+/g;
+        const blobUrls = finalContent.match(blobUrlPattern) || [];
+        // 혹시라도 이미지 임시 개수와 보관하고 있는 파일개수가 다른 부분 고려
+        for (let i = 0; i < blobUrls.length && i < imgaeFiles.length; i++) {
+          const imageFile = imgaeFiles[i];
+          const blobUrl = blobUrls[i];
+          // 아래에서 업로드 합니다.
+          try {
+            // 파일명을 생성한다.
+            const timestamp = Date.now() + i; // 각 이미지 마다 다른 시간글자
+            // todo-images 저장소 폴더명생성 / 파일명 생성
+
+            // 한글 파일명 또는 특수기호 처리
+            const goodFileName = (filename: string) => {
+              const lastDotIndex = filename.lastIndexOf('.');
+              const name = lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename;
+              const extension = lastDotIndex > 0 ? filename.substring(lastDotIndex) : '';
+
+              // 안전한 파일명 생성
+              let safeName = name
+                // 1단계: 공백을 언더스코어로 변환
+                .replace(/\s+/g, '_')
+                // 2단계: 한글, 특수기호, 이모지 등을 언더스코어로 변환
+                .replace(/[^\w\-_.]/g, '_')
+                // 3단계: 연속된 언더스코어를 하나로 통합
+                .replace(/_+/g, '_')
+                // 4단계: 앞뒤 언더스코어 제거
+                .replace(/^_|_$/g, '')
+                // 5단계: 파일명이 비어있거나 너무 짧으면 기본값 사용
+                .replace(/^$/, 'image');
+
+              // 파일명이 너무 길면 자르기 (확장자 제외 50자 제한)
+              if (safeName.length > 50) {
+                safeName = safeName.substring(0, 50);
+              }
+
+              // 확장자도 안전하게 처리
+              const safeExtension = extension
+                .replace(/[^\w.]/g, '') // 영문, 숫자, 점만 허용
+                .toLowerCase(); // 소문자로 통일
+
+              return safeName + safeExtension;
+            };
+
+            const safeFileName = goodFileName(imageFile.name);
+            const fileName = `${user!.id}_${timestamp}_${safeFileName}`;
+            const filePath = `${user!.id}/${fileName}`;
+            // supabase 에 실제 업로드
+            // 폴더가 있으면 재활용, 없으면 자동 생성
+            const { error } = await supabase.storage
+              .from('todo-images')
+              .upload(filePath, imageFile, { cacheControl: '3600', upsert: false });
+
+            if (error) {
+              // 오류가 나도 계속 반복해라.
+              continue;
+            }
+            // 업로드 된 파일의 public URL 을 가져와야 합니다.
+            const { data: urlData } = await supabase.storage
+              .from('todo-images')
+              .getPublicUrl(filePath);
+
+            // blob 주소의 문자열을 http 로 변경함
+            finalContent = finalContent.replace(blobUrl, urlData.publicUrl);
+          } catch (err) {
+            console.log(err);
+          }
+        }
+      }
+
+      // 현재 finalContent 는 많은 내용이 변경되었음 (기존 파일 삭제 또는 신규 파일 추가)
+      const result = await updateTodo(todo.id, { title, content: finalContent });
       if (result) {
         alert('할 일이 성공적으로 수정되었습니다.');
         navigate('/todos');
@@ -202,6 +292,7 @@ function TodoEditPage() {
             onChange={handleContentChange}
             placeholder="상세 내용을 입력하세요.(선택사항)"
             disabled={saving}
+            onImagesChange={handleImageChange}
           />
         </div>
         {/* 추가정보 출력 */}
