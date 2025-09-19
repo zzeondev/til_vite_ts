@@ -15,7 +15,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void; // 내용이 변결될때 실행할 함수
   placeholder?: string; // 안내 텍스트 (선택사항)
   disabled?: boolean; // 에디터를 비활성화할지 여부 (선택사항)
-  // 추가됨
+  // 추가됨.
   onImagesChange?: (images: File[]) => void; // 파일을 외부에 보관하는 용도
 }
 
@@ -26,12 +26,11 @@ const RichTextEditor = ({
   disabled = false,
   onImagesChange, // 외부로 이미지를 전달하는 함수
 }: RichTextEditorProps) => {
-  // ref 변수들을 저장해둠
-
-  // ReactQuill 을 보관해둡니다.
+  // ref 변수들을 저장해둠.
+  // ReactQuill 을 보관둡니다.
   const quilRef = useRef<ReactQuill | null>(null);
 
-  // 미리보기 이미지들을 보관할 임시 목록 ("blob:~~~")
+  // 미리보기 이미지들을 보관할 임시 목록("blob:~~")
   const tempImagesRef = useRef<TempImageFile[]>([]);
 
   // 가장 최근의 내용을 관리하기 위한 변수
@@ -43,56 +42,58 @@ const RichTextEditor = ({
     return URL.createObjectURL(file);
   }, []);
 
-  // React Quill 의 툴바의 파일 추가 (이미지 아이콘 클릭 처리)를 수정
-  // 리랜더링시 다시 함수를 안만들도록 useCallback 으로 보관
+  // React Quill 의  툴바의 파일 추가 (이미지 아이콘 클릭 처리)를 수정
+  // 리랜더링시 다시 함수 안만들도록 useCallback 으로 보관
   const imageHandler = useCallback(() => {
-    // alert('우리꺼');
     // input 태그를 코딩으로 만들어 낸다.
-    // <input type = "file" accept = "image/*" onchange="" />
+    // <input type="file" accept = "image/*" onchange="" />
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
-    // 여러개는 업데이트 예정
-    // input.setAttribute('multiple', 'true');
+    // 업데이트 : 여러개 선택 가능
+    input.setAttribute('multiple', 'true');
     input.setAttribute('accept', 'image/*');
     input.click();
     input.onchange = async () => {
-      // 파일 1개만 선택하도록 처리
-      const file = input.files?.[0];
-      if (!file) return;
-
-      // 파일 크기를 보통 5MB 로 제한
-      if (file.size > 5 * 1024 * 1024) {
-        alert('이미지 파일 크기는 5MB 이하여야 합니다.');
-        return;
-      }
-      // 임시 주소 생성
-      const tempUrl = createTempImageUrl(file);
-
-      // 절대 중복되지 않는 임시 ID 를 생성하자
-      const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-      // 임시 파일 및 주소를 저장
-      const tempImage: TempImageFile = {
-        file: file,
-        tempUrl: tempUrl,
-        id: tempId,
-      };
-
-      // 생성된 정보를 보관한다.
-      tempImagesRef.current.push(tempImage);
-      console.log(`이미지가 추가됨 : ${tempId} ${tempUrl}`);
+      // 업데이트 : 최소 1개 이상 파일 선택
+      const files = input.files;
+      if (!files || files.length === 0) return;
 
       // 실제 React Quill 내용 창에 출력
       const quill = quilRef.current?.getEditor();
-      if (quill) {
-        // 어디에다가 이미지를 출력할 것인가 위치를 파악
-        const range = quill.getSelection();
-        // 특정 범위가 없다면 끝에 배치한다.
-        const insertIndex = range ? range.index : quill.getLength();
+      if (!quill) return;
+
+      // 어디에다가 이미지를 출력할 것인가 위치를 파악
+      const range = quill.getSelection();
+      // 특정 범위가 없다면 끝에 배치한다.
+      let insertIndex = range ? range.index : quill.getLength();
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // 파일 크기를 보통 5MB 바이트로 제한
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`${file.name}은 이미지 파일 크기는 5MB 이하여야 합니다.`);
+          continue; // 이 파일은 건너띄어서 계속 실행
+        }
+        // 임시 주소 생성
+        const tempUrl = createTempImageUrl(file);
+        // 절대 중복되지 않는 임시 ID 를 생성하자.
+        const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+        // 임시 파일 및 주소를 저장
+        const tempImage: TempImageFile = {
+          file: file,
+          tempUrl: tempUrl,
+          id: tempId,
+        };
+
+        // 생성된 정보를 보관한다.
+        tempImagesRef.current.push(tempImage);
+        console.log(`이미지가 추가됨 : ${tempId} ${tempUrl}`);
+
         try {
-          // 직접 html 태그를 만들어서 삽입해줌
-          // 나중에 고민 해보자
-          // <p><img src="" /></p>
+          // 직접 html 태그를 만들어서 삽입해줌.
+          // 나중에 고민 좀 해보자.
+          // <p> <img src="" /> </p>
           const img = document.createElement('img');
           img.src = tempUrl;
           img.style.maxWidth = '100%';
@@ -114,32 +115,37 @@ const RichTextEditor = ({
             editorElement.insertBefore(p, editorElement.firstElementChild);
           } else {
             const nodes = editorElement.childNodes;
+
             if (insertIndex < nodes.length) {
               editorElement.insertBefore(p, nodes[insertIndex]);
             } else {
               editorElement.appendChild(p);
             }
           }
-          // 강제로 리랜더링 시킨다.
-          quill.update();
-          // 마우스 커서 위치를 설정한다.
-          quill.setSelection(insertIndex + 1);
+
+          // 다음 이미지를 위해서 입력 위치만 업데이트
+          insertIndex++;
         } catch (error) {
-          console.log('이미지 삽입 중 오류 :', error);
-          // 오류이더라도 다시 html 을 추가해 봄
+          console.log('이미지 삽입 중 오류 : ', error);
+          // 오류 이더라도 다시 html 을 추가해 봄.
           try {
-            const imgHtml = `<img src=${tempUrl} data-temp-id=${tempId} style="max-width:100%; height:auto; margin:10px0;" />`;
+            const imgHtml = `<img src=${tempUrl} data-temp-id=${tempId} style="max-width:100%; height:auto; maring: 10px 0;"/>`;
             quill.clipboard.dangerouslyPasteHTML(insertIndex, imgHtml);
-            quill.setSelection(insertIndex + 1);
+            insertIndex++;
           } catch (err) {
             console.log('이미지 삽입 정말 실패 : ', err);
           }
         }
       }
+
+      // 모든 이미지가 배치가 되면 강제렌더링
+      quill.update();
+      // 마우스 커서 위치 조절
+      quill.setSelection(insertIndex);
     };
   }, [createTempImageUrl]);
 
-  // value 변경되면 다시 value 를 보관함
+  // value 변경되면 다시 value 를 보관함.
   useEffect(() => {
     valueRef.current = value;
   }, [value]);
@@ -251,24 +257,25 @@ const RichTextEditor = ({
       const imageFiles = tempImagesRef.current.map(item => item.file);
       onImagesChange(imageFiles);
     }
-  }, [onImagesChange, value]); // 에디터에 내용이 바뀔 때마다 이미지 목록 업데이트
+  }, [onImagesChange, value]); // 에디터에 내용이 바뀔때마다 이미지 목록 업데이트
 
   // 에디터가 마운트 되면
-  // 즉, 화면에 보이면 이미지 버튼에 이벤트 리스너 추가
+  // 즉, 화면에 보이면 이미지 버튼에 이벤트 리스너추가
   useEffect(() => {
-    // 약간 시간을 두고 핸들러 등록 (에디터가 초기화 하는데 시간 걸림)
+    // 약간 시간을 두고 핸들러 등록 (에디터가 초기화 하는 데 시간걸림)
     const timer = setTimeout(() => {
       const quill = quilRef.current?.getEditor();
       if (quill) {
         console.log('Quill 에디터 초기화 성공!');
         const toolbar = quill.getModule('toolbar') as any;
         if (toolbar && toolbar.addHandler) {
-          console.log('이미지 핸들러 등록 실행함');
+          console.log('이미지 핸들러 등록 실행 함');
           // 우리가 원하는 핸들러 등록
           toolbar.addHandler('image', imageHandler);
         }
       }
     }, 100);
+
     // 클린업 함수
     return () => {
       clearTimeout(timer);
@@ -278,7 +285,7 @@ const RichTextEditor = ({
   return (
     <div>
       <ReactQuill
-        ref={quilRef} // React Quill 인스턴스를 보관해 둠
+        ref={quilRef} // React Quill 인스턴스를 보관해 둠.
         theme="snow" // 테마
         value={value} // 에디터에 보여줄 내용
         onChange={onChange} // 내용 변경시 실행할 함수
