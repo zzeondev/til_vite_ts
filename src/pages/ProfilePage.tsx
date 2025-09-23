@@ -11,8 +11,8 @@ import Loading from '../components/Loading';
  * - 회원탈퇴 기능 : 확인을 거치고 진행하도록
  */
 function ProfilePage() {
-  // 회원 기본 정보
-  const { user, deleteAccount } = useAuth();
+  // 회원 기본 정보 (카카오 회원 탈퇴 추가)
+  const { user, deleteAccount, unlinkKakaoAccount } = useAuth();
   // 데이터 가져오는 동안의 로딩
   const [loading, setLoading] = useState<boolean>(true);
   // 사용자 프로필
@@ -125,9 +125,30 @@ function ProfilePage() {
     }
   };
 
+  // 카카오 계정 연동 해제
+  const handleUnlinkKakao = async () => {
+    const message =
+      '카카오 계정 연동을 해제하시겠습니까? \n\n 연동 해제 후에는 카카오로 다시 로그인 할 수 없습니다.';
+    const isConfirm = confirm(message);
+    if (isConfirm) {
+      const result = await unlinkKakaoAccount();
+      if (result.success) {
+        alert(result.message);
+        // 연동 해제 후 로그아웃 처리
+        window.location.href = '/singin';
+      } else if (result.error) {
+        alert(`연동 해제 실패 : ${result.error}`);
+      }
+    }
+  };
+
   // 회원탈퇴
   const handleDeleteUser = () => {
-    const message: string = '😥 계정을 완전히 삭제하시겠습니까? \n\n 복구가 불가능합니다.';
+    // 카카오 로그인 사용자인지 확인
+    const isKakaoUser = user?.app_metadata.provider === 'kakao';
+    const message: string = isKakaoUser
+      ? '😥 카카오 계정 연동을 해제하고 계정을 삭제하시겠습니까? \n\n 복구가 불가능합니다.'
+      : '😥 계정을 완전히 삭제하시겠습니까? \n\n 복구가 불가능합니다.';
     let isConfirm = false;
     isConfirm = confirm(message);
 
@@ -221,6 +242,45 @@ function ProfilePage() {
       {/* 사용자 기본 정보 섹션 */}
       <div className="card">
         <h3 style={{ marginBottom: 'var(--space-4)', color: 'var(--gray--800)' }}>📧 기본 정보</h3>
+        {/* 로그인 방식 표시 */}
+        <div className="form-group">
+          <label className="form-label">로그인 방식</label>
+          <div
+            style={{
+              padding: 'var(--space-3)',
+              backgroundColor:
+                user?.app_metadata?.provider === 'kakao' ? '#FEE500' : 'var(--gray-50)',
+              borderRadius: 'var(--radius-md)',
+              color: user?.app_metadata?.provider === 'kakao' ? '#000000' : 'var(--gray-700)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+            }}
+          >
+            {user?.app_metadata?.provider === 'kakao' ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 3C6.48 3 2 6.48 2 10.5C2 13.52 4.5 16.1 8 17.5L7 21L10.5 18.5C11.3 18.7 12.1 18.8 13 18.8C18.52 18.8 23 15.32 23 11.3C23 7.28 18.52 3.8 13 3.8C12.7 3.8 12.4 3.8 12.1 3.9C12.1 3.6 12 3.3 12 3Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                카카오 로그인
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+                    fill="currentColor"
+                  />
+                </svg>
+                이메일 로그인
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="form-group">
           <label className="form-label">이메일</label>
           <div
@@ -598,8 +658,19 @@ function ProfilePage() {
             >
               정보수정
             </button>
+            {/* 카카오 사용자에게만 연동 해제 버튼 표시 */}
+            {user?.app_metadata?.provider === 'kakao' && (
+              <button
+                className="btn btn-warning btn-lg"
+                onClick={handleUnlinkKakao}
+                style={{ backgroundColor: '#FEE500', color: '#000000', border: 'none' }}
+              >
+                🔗 카카오 연동 해제
+              </button>
+            )}
+
             <button className="btn btn-danger btn-lg" onClick={handleDeleteUser}>
-              회원탈퇴
+              {user?.app_metadata?.provider === 'kakao' ? '카카오 연동 해제 & 탈퇴' : '회원탈퇴'}
             </button>
           </>
         )}
