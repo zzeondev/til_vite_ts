@@ -152,7 +152,7 @@ function AdminPage() {
                     </span>
                   </div>
                   <div className="admin-detail-row">
-                    <span className="admin-detail-label">삭제사유:</span>
+                    <span className="admin-detail-label">삭제 사유:</span>
                     <span className="admin-detail-value"> {item.reason}</span>
                   </div>
                 </div>

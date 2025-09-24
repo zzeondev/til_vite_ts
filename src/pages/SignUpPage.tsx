@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import KakaoLoginButton from '../components/KaKaoLoginButton';
+import KakaoLoginButton from '../components/KakaoLoginButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 function SignUpPage() {
   const { signUp, checkEmailExists, checkNicknameExists } = useAuth();
@@ -363,6 +364,13 @@ function SignUpPage() {
           onError={error => setMsg(`카카오 로그인 오류 : ${error}`)}
           onSuccess={message => setMsg(message)}
         />
+        {/* 구글 로그인 버튼 : 오류 메시지는 사용자도 볼 수 있어야 함 */}
+        <div style={{ marginTop: 'var(--space-3' }}>
+          <GoogleLoginButton
+            onError={error => setMsg(`구글 로그인 오류 : ${error}`)}
+            onSuccess={message => setMsg(message)}
+          />
+        </div>
 
         {/* 메시지 출력 */}
         {msg && (
