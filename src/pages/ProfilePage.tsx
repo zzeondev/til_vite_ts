@@ -12,7 +12,8 @@ import Loading from '../components/Loading';
  */
 function ProfilePage() {
   // 회원 기본 정보 (카카오, 구글 회원 탈퇴 추가)
-  const { user, deleteAccount, unlinkKakaoAccount, unlinkGoogleAccount } = useAuth();
+  const { user, deleteAccount, unlinkKakaoAccount, unlinkGoogleAccount, changePassword } =
+    useAuth();
   // 데이터 가져오는 동안의 로딩
   const [loading, setLoading] = useState<boolean>(true);
   // 사용자 프로필
@@ -34,9 +35,16 @@ function ProfilePage() {
   // 사용자가 새로운 이미지 선택시 즉, 편집 중인 경우 원본 URL 보관용 문자열
   const [originalAvatarUrl, setOriginalAvartarUrl] = useState<string | null>(null);
   // 이미지 제거 요청 상태(그러나, 실제 file 제거는 수정확인 버튼 눌렀을 때 처리)
-  const [imageRemovalRequest, setImageRemovalReauest] = useState<boolean>(false);
+  const [imageRemovalRequest, setImageRemovalRequest] = useState<boolean>(false);
   // input type="file" 태그 참조
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 비밀번호 변경 관련 상태
+  // 새 비밀번호
+  const [newPassword, setNewPassword] = useState<string>('');
+  // 새 비밀번호 확인
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [passwordMessage, setPasswordMessage] = useState<string>('');
 
   // 사용자 프로필 정보 가져오기
   const loadProfile = async () => {
@@ -111,7 +119,7 @@ function ProfilePage() {
       // 업데이트 성공시 초기화 진행
       setPreviewImage(null);
       setSelectedFile(null);
-      setImageRemovalReauest(false);
+      setImageRemovalRequest(false);
       setOriginalAvartarUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -135,7 +143,7 @@ function ProfilePage() {
       if (result.success) {
         alert(result.message);
         // 연동 해제 후 로그아웃 처리
-        window.location.href = '/singin';
+        window.location.href = '/signin';
       } else if (result.error) {
         alert(`연동 해제 실패 : ${result.error}`);
       }
@@ -152,10 +160,44 @@ function ProfilePage() {
       if (result.success) {
         alert(result.message);
         // 연동 해제 후 로그아웃 처리
-        window.location.href = '/singin';
+        window.location.href = '/signin';
       } else if (result.error) {
         alert(`연동 해제 실패 : ${result.error}`);
       }
+    }
+  };
+
+  // 비밀번호 변경
+  const handlePasswordChange = async () => {
+    // 입력값 검증
+    if (!newPassword.trim()) {
+      setPasswordMessage('새 비밀번호를 입력해주세요.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordMessage('비밀번호는 최소 6자 이상이어야 합니다.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    try {
+      const result = await changePassword(newPassword);
+      if (result.success) {
+        setPasswordMessage('비밀번호가 성공적으로 변경되었습니다.');
+        // 폼 초기화
+        setNewPassword('');
+        setConfirmPassword('');
+        // 3초 후 메시지 자동 제거
+        setTimeout(() => {
+          setPasswordMessage('');
+        }, 3000);
+      } else if (result.error) {
+        setPasswordMessage(`비밀번호 변경 실패: ${result.error}`);
+      }
+    } catch (err) {
+      setPasswordMessage('비밀번호 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -206,7 +248,7 @@ function ProfilePage() {
 
     setSelectedFile(file);
     // 새 이미지 선택 시 이미지 제거 요청 상태 초기화
-    setImageRemovalReauest(false);
+    setImageRemovalRequest(false);
   };
   // 이미지 파일 선택 취소
   const handleCancelUpload = () => {
@@ -225,7 +267,7 @@ function ProfilePage() {
     }
     // 즉시 제거하지 않습니다.
     // 제거하라는 상태만 별도로 관리함.
-    setImageRemovalReauest(true);
+    setImageRemovalRequest(true);
     setPreviewImage(null);
     setSelectedFile(null);
     if (fileInputRef.current) {
@@ -346,7 +388,7 @@ function ProfilePage() {
               color: 'var(--gray-700)',
             }}
           >
-            {user?.created_at && new Date(user.created_at).toLocaleString()}
+            {user?.created_at && new Date(user?.created_at).toLocaleString()}
           </div>
         </div>
       </div>
@@ -380,6 +422,55 @@ function ProfilePage() {
                 placeholder="닉네임을 입력하세요."
               />
             </div>
+            {/* 이메일 로그인 사용자에게만 비밀번호 변경 섹션 표시 */}
+            {(!user?.app_metadata.provider || user?.app_metadata.provider === 'email') && (
+              <div className="form-group">
+                <label className="form-label">🔒 비밀번호 변경</label>
+                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="새 비밀번호(최소 6자)"
+                    className="form-input"
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="비밀번호 확인"
+                    className="form-input"
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    onClick={handlePasswordChange}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    변경
+                  </button>
+                </div>
+                {/* 비밀번호 변경 메시지 */}
+                {passwordMessage && (
+                  <div
+                    style={{
+                      marginTop: 'var(--space-2)',
+                      padding: 'var(--space-2)',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '14px',
+                      backgroundColor: passwordMessage.includes('성공')
+                        ? 'var(--success-50)'
+                        : '#fef2f2',
+                      color: passwordMessage.includes('성공') ? 'var(--success-600)' : '#dc2626',
+                      border: `1px solid ${passwordMessage.includes('성공') ? 'var(--success-600)' : '#dc2626'}`,
+                    }}
+                  >
+                    {passwordMessage}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="form-group">
               <label className="form-label">아바타 편집</label>
               <div style={{ marginBottom: 'var(--space-4)' }}>
@@ -561,7 +652,7 @@ function ProfilePage() {
                         disabled={uploading}
                         className={`btn ${uploading ? 'btn-secondary' : 'btn-success'}`}
                         onClick={() => {
-                          setImageRemovalReauest(false);
+                          setImageRemovalRequest(false);
                         }}
                       >
                         제거 취소
@@ -677,7 +768,7 @@ function ProfilePage() {
                 setNickName(profileData?.nickname || '');
                 setPreviewImage(null);
                 setSelectedFile(null);
-                setImageRemovalReauest(false);
+                setImageRemovalRequest(false);
                 setOriginalAvartarUrl(null);
                 if (fileInputRef.current) {
                   fileInputRef.current.value = '';
@@ -695,7 +786,7 @@ function ProfilePage() {
                 setEdit(true);
                 // 편집 시작 시 원본 이미지 URL 저장
                 setOriginalAvartarUrl(profileData?.avatar_url || null);
-                setImageRemovalReauest(false);
+                setImageRemovalRequest(false);
               }}
             >
               정보수정

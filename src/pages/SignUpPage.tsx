@@ -166,7 +166,7 @@ function SignUpPage() {
                     setEmailCheckMessage('');
                   }
                 }}
-                placeholder="이메일"
+                placeholder="이메일을 입력하세요."
                 className="form-input"
                 required
                 style={{ flex: 1 }}

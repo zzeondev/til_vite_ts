@@ -34,6 +34,10 @@ type AuthContextType = {
   unlinkKakaoAccount: () => Promise<{ error?: string; success?: boolean; message?: string }>;
   // 구글 계정 연동 해제 함수
   unlinkGoogleAccount: () => Promise<{ error?: string; success?: boolean; message?: string }>;
+  // 비밀번호 변경 함수
+  changePassword: (
+    newPassword: string,
+  ) => Promise<{ error?: string; success?: boolean; message?: string }>;
 
   // 회원 로그아웃
   signOut: () => Promise<void>;
@@ -246,6 +250,33 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
+  // 비밀번호 변경 함수
+  const changePassword: AuthContextType['changePassword'] = async (newPassword: string) => {
+    try {
+      // 이메일 로그인 사용자인지 확인
+      if (user?.app_metadata.provider && user.app_metadata.provider !== 'email') {
+        return { error: '이메일 로그인 사용자만 비밀번호를 변경할 수 있습니다.' };
+      }
+      // 비밀번호 길이 확인
+      if (newPassword.length < 6) {
+        return { error: '비밀번호는 최소 6자 이상이어야 합니다.' };
+      }
+      // Supabase 에서 비밀번호 업데이트
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        console.log('비밀번호 변경 실패 : ', error.message);
+        return { error: '비밀번호 변경에 실패했습니다.' };
+      }
+      return {
+        success: true,
+        message: '비밀번호가 성공적으로 변경되었습니다.',
+      };
+    } catch (err) {
+      console.log('비밀번호 변경 오류 : ', err);
+      return { error: '비밀번호 변경 중 오류가 발생했습니다.' };
+    }
+  };
+
   // 회원 로그아웃
   const signOut: AuthContextType['signOut'] = async () => {
     await supabase.auth.signOut();
@@ -315,6 +346,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     signInWithGoogle,
     unlinkKakaoAccount,
     unlinkGoogleAccount,
+    changePassword,
     signOut,
     user,
     session,
