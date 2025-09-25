@@ -12,6 +12,9 @@ import TodoEditPage from './pages/TodoEditPage';
 import TodoListPage from './pages/TodoListPage';
 import TodosInfinitePage from './pages/TodosInfinitePage';
 import TodoWritePage from './pages/TodoWritePage';
+import DirectChatPage from './pages/chat/DirectChatPage';
+// 1:1 채팅관련 css
+import './components/chat/chat.css';
 
 const TopBar = () => {
   const { signOut, user } = useAuth();
@@ -42,6 +45,11 @@ const TopBar = () => {
       {!user && (
         <Link to="/signin" className="nav-link">
           로그인
+        </Link>
+      )}
+      {user && (
+        <Link to="/chat" className="nav-link">
+          1 : 1 채팅
         </Link>
       )}
       {user && (
@@ -138,6 +146,15 @@ function App() {
               element={
                 <Protected>
                   <AdminPage />
+                </Protected>
+              }
+            />
+            {/* 1 : 1 채팅 페이지 */}
+            <Route
+              path="/chat"
+              element={
+                <Protected>
+                  <DirectChatPage />
                 </Protected>
               }
             />
