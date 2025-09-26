@@ -77,7 +77,7 @@ const DirectChatList = () => {
               <span className="unread">
                 마지막 채팅 작성자 닉네임 : 마지막 채팅 메세지 내용을 출력합니다.
               </span>
-              <span className="no-message">메시지가 없습니다.</span>
+              {/* <span className="no-message">메시지가 없습니다.</span> */}
             </div>
           </div>
         </div>

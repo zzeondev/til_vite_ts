@@ -344,10 +344,11 @@
 }
 /* 채팅 종료 버튼 */
 .exit-chat-btn {
-  padding: 8px;
+  padding: 8px 16px;
   background-color: #dc3545;
   color: #ffffff;
   border: none;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -359,7 +360,7 @@
   opacity: 0.8;
 }
 
-/* ==== 채팅방 영역 ==== */
+/* ==== 채팅방 메시지 영역 ==== */
 /* 메시지 컨테이너 -스크롤 가능한 메시지 목록 */
 .chat-room-message {
   flex: 1;
@@ -385,7 +386,7 @@
 .message-group {
   margin-bottom: 24px;
 }
-/* 날짜 구분선 메시지 그룹 사이에 날짜 표시 */
+/* 날짜 구분선 - 메시지 그룹 사이에 날짜 표시 */
 .date-divider {
   text-align: center;
   margin: 16px 0;
@@ -424,6 +425,12 @@
   position: relative;
   z-index: 2;
 }
+/* 메시지들 묶음 컨테이너 */
+.message-group-container {
+  position: relative;
+  width: 100%;
+  padding: 0 20px;
+}
 
 /* ==== 개별 메시지 스타일 ==== */
 
@@ -433,13 +440,50 @@
   margin-bottom: 12px;
   gap: 8px;
 }
+/* 메시지 말풍선 컨테이너 */
+.message-bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+/* 메시지 호버시 시간 표시 - 불투명하게 */
+.message-bubble:hover .message-time {
+  opacity: 1;
+}
+/* 메시지 텍스트 - 말풍선 스타일 */
+.message-text {
+  padding: 8px 12px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  position: relative;
+}
+/* 메시지 시간 - 기본적으로 반투명 */
+.message-time {
+  font-size: 14px;
+  color: #999;
+  margin-top: 4px;
+  opacity: 0.7;
+}
 /* 나의 메시지 (오른쪽 정렬) - 파란색 말풍선 */
 .message-item.my-message {
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
-  max-width: 80%;
+  max-width: 100%;
   gap: 8px;
+}
+/* 나의 메시지 말풍선 - 파란색 배경 */
+.my-message .message-text {
+  background-color: #007bff;
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+/* 나의 메시지 시간 - 왼쪽 정렬 */
+.my-message .message-time {
+  text-align: right;
 }
 /* 상대방의 메시지 (왼쪽 정렬) - 회색 말풍선 */
 .message-item.other-message {
@@ -447,6 +491,113 @@
   justify-content: flex-start;
   align-items: flex-end;
   margin-right: auto;
-  max-width: 80%;
+  max-width: 100%;
   gap: 8px;
+}
+/* 상대방의 메시지 말풍선 - 회색 배경 */
+.other-message .message-text {
+  background-color: #f1f3f4;
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+/* 나의 메시지 시간 - 왼쪽 정렬 */
+.other-message .message-time {
+  text-align: left;
+}
+/* 채팅룸의 아바타 */
+.message-avatar {
+  /* flex 에서 내용이 너비보다 큰 경우 줄여주는 비율 */
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+/* 메시지 아바타 이미지 - 작은 원형 */
+.message-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+/* 아바타 닉네임 별도 설정 가능하도록 */
+.message-avatar .avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 12px;
+  color: #ffffff;
+}
+
+/* ==== 메세지 입력 영역 ==== */
+/* 메시지 입력 컨테이너 - 하단 고정 */
+.message-input {
+  border-top: 1px solid #e0e0e0;
+  background-color: #fff;
+  padding: 16px;
+}
+/* 메시지 입력 폼 */
+.message-form {
+  width: 100%;
+}
+/* 입력 컨테이너 - 텍스트, 전송 버튼 */
+.input-containter {
+  display: flex;
+  gap: 8px;
+}
+/* 메시지 입력 텍스트 영역 - 자동 높이 조절 */
+.message-textarea {
+  flex: 1;
+  min-height: 40px;
+  max-height: 120px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  /* 너비,높이 제어함 */
+  resize: none;
+  font-size: 14px;
+  line-height: 1.4;
+}
+/* 텍스트 영역 포커스 시 파란색 테두리 */
+.message-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+/* 전송 버튼 - 원형 버튼 */
+.send-button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+/* 전송 버튼 호버 효과 -  */
+.send-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+/* 전송 버튼 비활성화 상태 */
+.send-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+/* 로딩 스피너 - 전송 중 표시 */
+.loading-spiner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+
+  animation: spin 0.8s linear infinite;
+}
+/* 스피너 회전 애니메이션 */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

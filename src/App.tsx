@@ -13,7 +13,7 @@ import TodoListPage from './pages/TodoListPage';
 import TodosInfinitePage from './pages/TodosInfinitePage';
 import TodoWritePage from './pages/TodoWritePage';
 import DirectChatPage from './pages/chat/DirectChatPage';
-// 1:1 채팅관련 css
+// 1:1 채팅 관련 css
 import './components/chat/chat.css';
 
 const TopBar = () => {
