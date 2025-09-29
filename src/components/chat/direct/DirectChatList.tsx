@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useDirectChat } from '../../../contexts/DirectChatContext';
 
 // Props 정의
 interface DirectChatListProps {
@@ -18,16 +19,21 @@ interface ChatUser {
   id: string; // 사용자 고유 식별자 (UUID)
   email: string; // 사용자 이메일 주소
   nickname: string; // 표시용 닉네임
-  avatar_url?: string; // 프로필 이미지 URL (선택사항)
+  avatar_url?: string | null; // 프로필 이미지 URL (선택사항)
 }
 
 const DirectChatList = ({ onChatSelect, onCreateChat, selectdChatId }: DirectChatListProps) => {
-  // DB 에서 읽어온 데이터를 관리함 : 여러 곳에서 활용하는 데이터 이므로 context 를 활용예정
-  const [users, setUsers] = useState<ChatUser[]>([]);
+  // Context 활용
+  const { loadChats, createDirectChat, error, users } = useDirectChat();
 
   // 사용자 검색 상태 관리
   const [searchTerm, setSearchTerm] = useState<string>(''); // 사용자 검색어
   const [showUserSearch, setShowUserSearch] = useState<boolean>(false); // 사용자 검색 UI 표시 여부
+
+  // 최초에 컴포넌트 마운트시 채팅 목록 로드
+  useEffect(() => {
+    loadChats();
+  }, [loadChats]); // 신규 또는 메세지 전송 등으로 업데이트 시 목록 호출
 
   // 컴포넌트가 변경시 사용자 검색 즉시 실행
   // 검색어가 비어있지 않을 때만 검색 수행
@@ -46,14 +52,28 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectdChatId }: DirectCha
    * 3. 사용자 검색 UI 숨김
    * 4. 사용자 검색어 초기화
    */
-  const handleUserSelect = (user: ChatUser) => {
-    // 사용자 선택됨
-    // 사용자의 id 를 이용해서 채팅방을 생성해야 합니다.
-    onChatSelect(user.id); // 새로운 채팅방 생성
-    setShowUserSearch(false); // 사용자 검색 UI 숨기기
-    setSearchTerm(''); // 검색어 초기화
+  const handleUserSelect = async (user: ChatUser) => {
+    // 상대방 선택됨
+    // 상대방의 id 를 이용해서 채팅방을 생성해야 합니다.
+    const chatId = await createDirectChat(user.id);
+    if (chatId) {
+      onChatSelect(user.id); // 새로운 채팅방 생성
+      setShowUserSearch(false); // 사용자 검색 UI 숨기기
+      setSearchTerm(''); // 검색어 초기화
+    }
   };
 
+  // 에러 상태일 때 에러 메세지 표시
+  if (error) {
+    return (
+      <div>
+        <div>
+          <p>오류 : {error}</p>
+          <button onClick={loadChats}>다시 시도</button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="chat-list">
       {/* 채팅 목록 헤더 - 제목과 새 채팅 버튼 */}
