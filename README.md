@@ -755,3 +755,527 @@ export default App;
 ## 13. 채팅의 각 기능 테스트하기
 
 - /src/pages/chat/DirectChatPage.tsx 업데이트 및 활용
+- 사용자 선택 채팅방 번호를 전달 (각 컴포넌트)
+
+```tsx
+/**
+ * 주요 기능
+ * - 채팅목록과 채팅방을 분할한 레이아웃으로 표시
+ * - 채팅방 선택 및 채팅방 전환 관리
+ * - 환영 화면 표시 (채팅방 미선택 시)
+ * - 반응형 레이아웃 지원
+ * - 레이아웃 구성 : 사이드바와 메인 영역으로 구성
+ * - 컴포넌트 구성 : DirectChatList 와 DirectChatRoom 컴포넌트
+ */
+
+import { useState } from 'react';
+import DirectChatList from '../../components/chat/direct/DirectChatList';
+import DirectChatRoom from '../../components/chat/direct/DirectChatRoom';
+
+function DirectChatPage() {
+  // 현재 선택된 채팅방의 ID 상태 관리
+  const [selectedChatId, setSelectedChatId] = useState<string | null>('');
+
+  /**
+   * 채팅방 선택 처리 함수
+   * DirectChatList 에서 목록 중 채팅방 1개를 선택하면 호출됨
+   * 선택된 채팅방 ID 를 상태에 보관함
+   */
+  const handleChatSelect = (chatId: string) => {
+    setSelectedChatId(chatId);
+  };
+
+  /**
+   * 새로운 채팅 생성 처리 함수
+   *
+   * DirectChatList 에서 새 채팅 버튼 클릭시 호출
+   */
+  const handleCreateChat = () => {
+    // 새로운 채팅방 생성 처리
+  };
+
+  return (
+    <div className="chat-page">
+      {/* 메인 채팅 컨테이너 - 사이드바와 메인 영역으로 구성 */}
+      <div className="chat-container">
+        {/* 왼쪽 사이드 바 - 채팅 목록 표시 */}
+        <div className="chat-sidebar">
+          <DirectChatList
+            onChatSelect={handleChatSelect} // 채팅방 선택시 호출되는 콜백 함수
+            onCreateChat={handleCreateChat} // 새 채팅방 생성시 호출되는 콜백 함수
+            selectedChatId={selectedChatId || undefined} // 현재 선택된 채팅방 ID
+          />
+        </div>
+        {/* 오른쪽 메인 영역 - 채팅방 또는 환영 화면 표시 */}
+        <div className="chat-main">
+          {/* 선택된 채팅방 ID 유무 */}
+          {selectedChatId ? (
+            // 채팅방이 선택된 경우 : DirectChatRoom
+            <DirectChatRoom chatId={selectedChatId} />
+          ) : (
+            // 채팅방이 선택되지 않은 경우 : 환영 화면 표시
+            <div className="chat-welcome">
+              {/* 환영 화면 내용 */}
+              <div className="welcome-content">
+                <h2>1:1 채팅</h2>
+                <p>좌측에서 채팅방을 선택하거나</p>
+                <p>새 채팅 버튼을 눌러 대화를 시작하세요.</p>
+                {/* 기능 안내 정보 */}
+                <div className="feature-info">
+                  <p>💬 실시간 1:1 메시지</p>
+                  <p>👥 사용자 검색 및 초대</p>
+                  <p>📱 반응형 디자인</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default DirectChatPage;
+```
+
+- /src/components/chat/DirectChatList.tsx
+- Context 를 통해서 Service API 호출 및 상태 출력
+
+```tsx
+/**
+ * - 채팅 네비게이션 : 사용자가 참여 중인 채팅방 목록 제공
+ * - 상태 표시 : 읽지 않은 메시지와 최신 활동 표시
+ * - 새 채팅 시작 : 사용자 검색을 통한 새 채팅방 생성
+ */
+
+import { useEffect, useState } from 'react';
+import { useDirectChat } from '../../../contexts/DirectChatContext';
+import type { ChatUser } from '../../../types/ChatType';
+
+// Props 정의
+interface DirectChatListProps {
+  onChatSelect: (chatId: string) => void; // 채팅방 선택시 호출되는 콜백 함수
+  onCreateChat: () => void; // 새 채팅방 생성시 호출되는 콜백 함수
+  selectedChatId?: string; // 현재 선택된 채팅방 ID
+}
+
+const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectChatListProps) => {
+  // Context 활용
+  const { loadChats, createDirectChat, error, users, searchUsers, loading, chats } =
+    useDirectChat();
+
+  // 사용자 검색 상태 관리
+  const [searchTerm, setSearchTerm] = useState<string>(''); // 사용자 검색어
+  const [showUserSearch, setShowUserSearch] = useState<boolean>(false); // 사용자 검색 UI 표시 여부
+
+  // 최초에 컴포넌트 마운트시 채팅 목록 로드
+  useEffect(() => {
+    loadChats();
+  }, [loadChats]); // 신규 또는 메세지 전송 등으로 업데이트 시 목록 호출
+
+  // 컴포넌트가 변경시 사용자 검색 즉시 실행
+  // 검색어가 비어있지 않을 때만 검색 수행
+  useEffect(() => {
+    // 사용자 검색어가 만약 있다면
+    if (searchTerm.trim()) {
+      // console.log('DB 에서 사용자 닉네임을 실시간 검색함...');
+      // 검색어가 입력이 되면 Service 의 사용자 검색 API 를 호출해야 한다.
+      searchUsers(searchTerm);
+    }
+  }, [searchTerm, searchUsers]);
+
+  // 날짜 관련 포맷 설정
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    // 24시간 이내인 경우 시간만 표시
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false, // 24시간 형식 사용
+      });
+    } else {
+      // 24시간 이후인 경우 날짜만 표시
+      return date.toLocaleDateString('ko-KR', {
+        month: 'short', // 짧은 월 이름 (예: "12월")
+        day: 'numeric', // 숫자 날짜 (예: "25")
+      });
+    }
+  };
+
+  /**
+   * 사용자 선택 시 새 채팅방 생성 및 선택
+   * 처리 과정 :
+   * 1. 선택된 사용자와 새 채팅방 생성
+   * 2. 생성된 채팅방을 즉시 선택된 것으로 인정
+   * 3. 사용자 검색 UI 숨김
+   * 4. 사용자 검색어 초기화
+   */
+  const handleUserSelect = async (user: ChatUser) => {
+    // 상대방 선택됨
+    // 상대방의 id 를 이용해서 채팅방을 생성해야 합니다.
+    const chatId = await createDirectChat(user.id);
+    if (chatId) {
+      onChatSelect(user.id); // 새로운 채팅방 생성
+      setShowUserSearch(false); // 사용자 검색 UI 숨기기
+      setSearchTerm(''); // 검색어 초기화
+    }
+  };
+
+  // 에러 상태일 때 에러 메세지 표시
+  if (error) {
+    return (
+      <div className="chat-list">
+        <div className="error-message">
+          <p>오류 : {error}</p>
+          <button onClick={loadChats}>다시 시도</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat-list">
+      {/* 채팅 목록 헤더 - 제목과 새 채팅 버튼 */}
+      <div className="chat-list-header">
+        <h2>1 : 1 채팅</h2>
+        {/* 사용자가 새 채팅 생성시 showUserSearch 를 true 로 변경 */}
+        <button className="new-chat-btn" onClick={() => setShowUserSearch(!showUserSearch)}>
+          새 채팅
+        </button>
+      </div>
+
+      {/* 사용자 검색 UI - 새 채팅 버튼 클릭 시 표시 */}
+      {showUserSearch && (
+        <div className="user-search">
+          {/* 사용자 검색 필드 */}
+          <input
+            type="text"
+            value={searchTerm} // 사용자 검색어
+            onChange={e => setSearchTerm(e.target.value)} // 사용자 검색어 변경 진행
+            placeholder="사용자 검색..."
+            className="search-input"
+          />
+
+          {/* 검색 결과 목록 */}
+          <div className="search-result">
+            {/* 검색된 사용자 출력 */}
+            {users.map(user => (
+              // 사용자 중 대화상대를 선택할 수 있음 : handleUserSelect
+              <div key={user.id} className="user-item" onClick={() => handleUserSelect(user)}>
+                {/* 사용자 아바타 */}
+                <div className="user-avatar">
+                  {user.avatar_url ? (
+                    // 사용자 아바타 이미지 출력
+                    <img src={user.avatar_url} alt={user.nickname} />
+                  ) : (
+                    // 사용자 아바타 닉네임 출력 : 첫 글자만 보여줌
+                    <div className="avatar-placeholder">{user.nickname.charAt(0)}</div>
+                  )}
+                </div>
+                {/* 사용자 정보 */}
+                <div className="user-info">
+                  <div className="user-nickname">{user.nickname}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 검색 결과가 없을 때 표시 */}
+          {/* 사용자 검색어는 있는데 사용자 목록이 없다면 */}
+          {searchTerm && users.length === 0 && (
+            <div className="no-results">검색 결과가 없습니다.</div>
+          )}
+        </div>
+      )}
+
+      {/* 채팅 목록 컨테이너 */}
+      <div className="chat-items">
+        {loading ? (
+          // 로딩표시
+          <div className="loading">로딩 중...</div>
+        ) : chats.length === 0 ? (
+          // 채팅방이 없을 때 안내 메시지
+          <div className="no-chats">
+            <p>아직 채팅방이 없습니다.</p>
+            <p>새 채팅 버튼을 눌러 대화를 시작하세요!</p>
+          </div>
+        ) : (
+          // 채팅 목록 렌더링
+          chats.map(chat => (
+            //개별 채팅 아이템
+            <div
+              key={chat.id}
+              className={`chat-item ${selectedChatId === chat.id ? 'selected' : ''} `}
+              onClick={() => onChatSelect(chat.id)}
+            >
+              {/* 채팅 상대방 아바타 */}
+              <div className="chat-avatar">
+                {chat.other_user.avatar_url ? (
+                  // 상대방 아바타 이미지 있는경우
+                  <img src={chat.other_user.avatar_url} alt={chat.other_user.nickname} />
+                ) : (
+                  // 상대방 아바타 이미지 없는 경우
+                  <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
+                )}
+
+                {/* 읽지 않은 메시지 개수 배지 */}
+                {chat.unread_count > 0 && <div className="unread-badge">{chat.unread_count}</div>}
+              </div>
+              {/* 채팅 정보 */}
+              <div className="chat-info">
+                {/* 채팅 헤더 - 이름과 시간 */}
+                <div className="chat-header">
+                  <div className="chat-name">{chat.other_user.nickname}</div>
+                  <div className="chat-time">
+                    {chat.last_message ? formatTime(chat.last_message.created_at) : ''}
+                  </div>
+                </div>
+
+                {/* 마지막 메시지 미리보기 */}
+                <div className="chat-preview">
+                  {chat.last_message ? (
+                    <span className={chat.unread_count > 0 ? 'unread' : ''}>
+                      {/* 마지막 채팅 작성자 닉네임 : 마지막 채팅 메세지 내용을 출력합니다. */}
+                      {chat.last_message.sender_nickname} : {chat.last_message.content}
+                    </span>
+                  ) : (
+                    <span className="no-message">메시지가 없습니다.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default DirectChatList;
+```
+
+- /src/components/chat/DirectChatRoom.tsx
+- Context 를 통해서 Service API 호출 및 상태 출력
+
+```tsx
+import React, { useEffect, useRef } from 'react';
+import MessageInput from '../common/MessageInput';
+import { useDirectChat } from '../../../contexts/DirectChatContext';
+
+// DirectChatRoom 컴포넌트의 Props 타입 정의
+interface DirectChatRoomProps {
+  chatId: string;
+}
+
+const DirectChatRoom = ({ chatId }: DirectChatRoomProps) => {
+  // DirectChatContext 에서 필요한 상태와 함수를 가져오기
+  const { messages, loading, error, loadMessages } = useDirectChat();
+
+  // 메시지 개수가 많으면 하단으로 스크롤 해야함
+  // 새 매시지가 추가될 때 마다 최신 메시지를 볼 수 있도록 해야함
+  const messageEndRef = useRef<HTMLDivElement>(null);
+  const scrollToBottom = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // 채팅방 ID 가 변경이 되면 메시지를 다시 로드
+  useEffect(() => {
+    if (chatId) {
+      loadMessages(chatId);
+    }
+  }, [chatId, loadMessages]);
+
+  // 메시지 시간 포맷팅 함수 - HH:MM:DD 형식 반환
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false, // 24시간 형식 사용
+    });
+  };
+
+  // 날짜 포맷팅 함수 - 오늘 : "오늘" , 과거 : "12월 25일" 형식
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+
+    if (isToday) {
+      return '오늘';
+    } else {
+      return date.toLocaleDateString('ko-KR', {
+        month: 'short', // 짧은 월 이름 (예: "12월")
+        day: 'numeric', // 숫자 날짜 (예: "25")
+      });
+    }
+  };
+
+  // 메시지를 날짜별로 그룹화하는 함수 - 같은 날짜의 메시지들을 하나의 그룹으로
+  // 날짜 구분선도 표시
+  const groupMessagesByDate = (messages: any[]) => {
+    const groups: { [key: string]: any[] } = {};
+    messages.forEach(message => {
+      const date = new Date(message.created_at).toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    return groups;
+  };
+
+  // 현재 사용자 ID (지금은 Mock 버전이어서 current 라고 함)
+  // 실제 구현에서는 인증된 사용자의 ID 를 사용함
+  const currentUserId = 'current';
+
+  // 에러 상태일 때 에러 메시지 표시
+  if (error) {
+    return (
+      <div className="chat-room">
+        <div className="error-message">
+          <p>오류 : {error}</p>
+          <button onClick={() => loadMessages(chatId)}>다시 시도</button>
+        </div>
+      </div>
+    );
+  }
+
+  // 로딩 상태일 때 로딩 메시지 표현
+  if (loading) {
+    return (
+      <div className="chat-room">
+        <div className="loading">메시지를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // 메시지들을 날짜별로 그룹화 (리랜더링 자동으로 됨)
+  const messageGroups = groupMessagesByDate(messages);
+
+  return (
+    <div className="chat-room">
+      {/* 채팅방 헤더 - 제목과 나가기 */}
+      <div className="chat-room-header">
+        {/* 채팅방 정보 */}
+        <div className="chat-room-info">
+          <h3>1:1 채팅 (상대방 닉네임)</h3>
+        </div>
+        {/* 채팅방 액션 버튼들 */}
+        <div className="chat-room-actions">
+          {/* 채팅 나가기 버튼 */}
+          <button
+            className="exit-chat-btn"
+            onClick={() => {
+              if (window.confirm('채팅방을 나가시겠습니까?')) {
+                alert('채팅방을 나갔습니다. (Mock 버전)');
+              }
+            }}
+          >
+            나가기
+          </button>
+        </div>
+      </div>
+      {/* 메시지 목록 영역 */}
+      <div className="chat-room-message">
+        {Object.keys(messageGroups).length === 0 ? (
+          // 메시지가 없을 때 안내 메시지
+          <div className="no-message">
+            <p>아직 메시지가 없습니다.</p>
+            <p>첫 번째 메시지를 보내세요!</p>
+          </div>
+        ) : (
+          // 날짜 별로 그룹화된 메시지 목록 랜더링
+          Object.entries(messageGroups).map(([date, dateMessages]) => (
+            <div key={date} className="message-group">
+              {/* 날짜 구분선 */}
+              <div className="date-divider">
+                {/* 날짜 출력 */}
+                <span>{formatDate(dateMessages[0].created_at)}</span>
+              </div>
+
+              {/* 메시지들 묶음 컨테이너 */}
+              <div className="message-group-container">
+                {dateMessages.map(message => {
+                  const isMyMessage = message.sender.id === currentUserId;
+
+                  return (
+                    <div
+                      key={message.id}
+                      className={`message-item ${isMyMessage ? 'my-message' : ' other-message'}`}
+                    >
+                      {isMyMessage ? (
+                        <>
+                          {/* 나의 메시지 - 오른쪽 정렬 */}
+                          {/* 내 메시지 : 말풍선, 시간, 아바타 (오른쪽 정렬) */}
+                          <div className="message-bubble">
+                            <div className="message-text">{message.content}</div>
+                            <div className="message-time">{formatTime(message.created_at)}</div>
+                          </div>
+                          <div className="message-avatar">
+                            {message.sender.avatar_url ? (
+                              <>
+                                {/* 나의 아바타 이미지가 있는 경우 */}
+                                <img
+                                  src={message.sender.avatar_url}
+                                  alt={message.sender.nickname}
+                                />
+                              </>
+                            ) : (
+                              <>
+                                {/* 나의 아바타 이미지가 없는 경우 - 첫글자만*/}
+                                <div className="avatar-placeholder">
+                                  {message.sender.nickname.charAt(0)}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* 대상의 메시지 - 왼쪽 정렬 */}
+                          <div className="message-avatar">
+                            {message.sender.avatar_url ? (
+                              <>
+                                {/* 대화상대 아바타 이미지가 있는 경우 */}
+                                <img src={message.sender.avatar} alt={message.sender.nickname} />
+                              </>
+                            ) : (
+                              <>
+                                {/* 대화상대 아바타 이미지가 없는 경우 - 첫글자만*/}
+                                <div className="avatar-placeholder">
+                                  {message.sender.nickname.charAt(0)}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          {/* 대화상대 메시지 :  말풍선, 시간, 아바타 (왼쪽 정렬) */}
+                          <div className="message-bubble">
+                            <div className="message-text">{message.content}</div>
+                            <div className="message-time">{formatTime(message.created_at)}</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        )}
+        {/* 자동 스크롤을 위한 참조 */}
+        <div ref={messageEndRef} />
+      </div>
+
+      {/* 메시지 입력 컴포넌트 */}
+      <MessageInput chatId={chatId} />
+    </div>
+  );
+};
+
+export default DirectChatRoom;
+```

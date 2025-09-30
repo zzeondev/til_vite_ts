@@ -41,7 +41,7 @@ export interface ChatListItem {
   last_message?: {
     // 마지막 메시지 정보(선택사항)
     content: string; // 내용
-    create_at: string; // 작성시간
+    created_at: string; // 작성시간
     sender_nickname: string; // 보낸사람 닉네임
   };
   other_user: ChatUser; // 상대방 사용자 정보

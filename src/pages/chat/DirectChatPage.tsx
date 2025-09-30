@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 import DirectChatList from '../../components/chat/direct/DirectChatList';
-import { DirectChatRoom } from '../../components/chat/direct/DirectChatRoom';
+import DirectChatRoom from '../../components/chat/direct/DirectChatRoom';
 
 function DirectChatPage() {
   // 현재 선택된 채팅방의 ID 상태 관리
@@ -43,7 +43,7 @@ function DirectChatPage() {
           <DirectChatList
             onChatSelect={handleChatSelect} // 채팅방 선택시 호출되는 콜백 함수
             onCreateChat={handleCreateChat} // 새 채팅방 생성시 호출되는 콜백 함수
-            selectdChatId={selectedChatId || undefined} // 현재 선택된 채팅방 ID
+            selectedChatId={selectedChatId || undefined} // 현재 선택된 채팅방 ID
           />
         </div>
         {/* 오른쪽 메인 영역 - 채팅방 또는 환영 화면 표시 */}
@@ -51,7 +51,7 @@ function DirectChatPage() {
           {/* 선택된 채팅방 ID 유무 */}
           {selectedChatId ? (
             // 채팅방이 선택된 경우 : DirectChatRoom
-            <DirectChatRoom />
+            <DirectChatRoom chatId={selectedChatId} />
           ) : (
             // 채팅방이 선택되지 않은 경우 : 환영 화면 표시
             <div className="chat-welcome">

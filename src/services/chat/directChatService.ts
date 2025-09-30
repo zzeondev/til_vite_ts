@@ -51,7 +51,7 @@ const mockChats: ChatListItem[] = [
     // 마지막 메시지 정보(선택사항)
     last_message: {
       content: '안녕하세요!', // 내용
-      create_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 작성시간
+      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 작성시간
       sender_nickname: '김철수', // 보낸사람 닉네임
     },
     other_user: mockUser[0], // 상대방 사용자 정보
@@ -65,7 +65,7 @@ const mockChats: ChatListItem[] = [
     // 마지막 메시지 정보(선택사항)
     last_message: {
       content: '오늘 날씨가 좋네요^^', // 내용
-      create_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 작성시간
+      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 작성시간
       sender_nickname: '이영희', // 보낸사람 닉네임
     },
     other_user: mockUser[2], // 상대방 사용자 정보
