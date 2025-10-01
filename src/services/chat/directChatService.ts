@@ -1,175 +1,239 @@
 /**
- * 1 : 1 채팅 서비스 (Mock 버전)
- *  - 실제 supabase API 연동 전까지 사용함.
- *  - Mock 데이터와 서비스 함수들 제공함.
- *  - 추후 Mock 데이터를 실제 API 호출로 대체 예정.
+ * 1 : 1 채팅 서비스 (Supabase 연동 버전)
+ *  - 실제 Supabase API를 사용한 채팅 서비스
+ *  - 데이터베이스 연동을 통한 실시간 채팅 기능
  *
  * 주요기능
  *  - 채팅방 생성 및 조회
  *  - 메시지 전송 및 조회
  *  - 사용자 검색
- *  - Mock 데이터를 이용한 UI 테스트
+ *  - 실시간 메시지 동기화
  *
- * 주의 사항
- *  - 모든 Mock 데이터를 실제 Supabase 쿼리로 대체
- *  - 에러처리도 상세하게 진행
- *  - 실시간 기능 (WebSocket 또는 Supabase Realtimes) 추가
+ * Supabase 테이블 구조
+ *  - direct_chats: 1:1 채팅방 정보
+ *  - direct_messages: 메시지 정보
+ *  - auth.users: 사용자 인증 정보
  */
 
+import { supabase } from '../../lib/supabase';
 import type {
-  Chat,
+  DirectChat,
   ChatApiResponse,
   ChatListItem,
   ChatUser,
   CreateMessageData,
-  Message,
-  MessageDetail,
+  DirectMessage,
 } from '../../types/ChatType';
 
 /**
- * Mock 사용자 데이터
- *  실제로는 Supabase 의 profiles 테이블에서 가져올 데이터 샘플
- *  고유한 ID, 이메일, 닉네임, 아바타 URL
+ * 현재 사용자 정보 가져오기
  */
-const mockUser: ChatUser[] = [
-  { id: '1', email: 'user1@example.com', nickname: '김철수', avatar_url: null },
-  { id: '2', email: 'user2@example.com', nickname: '고길동', avatar_url: null },
-  { id: '3', email: 'user3@example.com', nickname: '이영희', avatar_url: null },
-  { id: '4', email: 'user4@example.com', nickname: '재현님', avatar_url: null },
-];
-
-/**
- * Mock 채팅방 목록 데이터
- *  실제로는 Supabase 의 채팅목록 테이블에서 가져올 데이터 샘플
- *  각 목록에는 마지막 메시지, 읽지 않는 메시지 수, 상대방 정보 포함
- */
-const mockChats: ChatListItem[] = [
-  {
-    id: 'chat1',
-    name: '김철수', // 채팅방 이름인데 1:1 이라서 상대방 닉네임으로
-    type: 'direct', // 채팅 타입
-    // 마지막 메시지 정보(선택사항)
-    last_message: {
-      content: '안녕하세요!', // 내용
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 작성시간
-      sender_nickname: '김철수', // 보낸사람 닉네임
-    },
-    other_user: mockUser[0], // 상대방 사용자 정보
-    unread_count: 2, // 읽지 않은 메시지 수
-    updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 마지막 업데이트 시간
-  },
-  {
-    id: 'chat2',
-    name: '이영희', // 채팅방 이름인데 1:1 이라서 상대방 닉네임으로
-    type: 'direct', // 채팅 타입
-    // 마지막 메시지 정보(선택사항)
-    last_message: {
-      content: '오늘 날씨가 좋네요^^', // 내용
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 작성시간
-      sender_nickname: '이영희', // 보낸사람 닉네임
-    },
-    other_user: mockUser[2], // 상대방 사용자 정보
-    unread_count: 0, // 읽지 않은 메시지 수
-    updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 마지막 업데이트 시간
-  },
-];
-
-/**
- * Mock 메시지 데이터
- *  실제로는 Supabase 의 메세지 테이블에서 가져올 데이터 샘플
- *  채티방 ID를 키로 해서 각 채팅방의 메시지를 그룹화후 관리
- */
-const mockMessages: { [chatId: string]: MessageDetail[] } = {
-  chat1: [
-    {
-      id: 'msg1',
-      chat_id: 'chat1',
-      sender_id: '1',
-      content: '안녕하세요.',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      sender: mockUser[0],
-    },
-    {
-      id: 'msg2',
-      chat_id: 'chat1',
-      sender_id: '1',
-      content: '안녕하세요! 반갑습니다.',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      sender: {
-        id: 'current', // 현재 mockUser 에 없는 사용자 임시로.
-        email: 'me@example.com',
-        nickname: '나',
-        avatar_url: null,
-      },
-    },
-    {
-      id: 'msg3',
-      chat_id: 'chat1',
-      sender_id: '1',
-      content: '오늘 날씨가 정말 좋네요!.',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      sender: {
-        id: 'current', // 현재 mockUser 에 없는 사용자 임시로.
-        email: 'me@example.com',
-        nickname: '나',
-        avatar_url: null,
-      },
-    },
-    {
-      id: 'msg4',
-      chat_id: 'chat1',
-      sender_id: '1',
-      content: '오늘 뭐 하시나요?',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      sender: mockUser[0],
-    },
-  ],
-  chat2: [
-    {
-      id: 'msg5',
-      chat_id: 'chat2',
-      sender_id: '2',
-      content: '오늘 날씨가 좋네요.',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      sender: mockUser[2],
-    },
-  ],
-};
+async function getCurrentUser() {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error('사용자가 로그인되지 않았습니다.');
+  }
+  return user;
+}
 
 /**
  * 1 : 1 채팅방 생성 또는 찾기
  * - 사용자가 특정 사용자와 채팅을 시작하려고 할 때 호출
- * - 기존 채팅방이 있으면 재사용, 없으면 새로 생성함
+ * - 기존 채팅방이 있으면 재사용, 없으면 새로 생성함.
  * - 중복 채팅방이 생성되지 않도록
  *
  * @param participantId - 채팅방에 참여할 상대방 ID
  */
 export async function findOrCreateDirectChat(
   participantId: string,
-): Promise<ChatApiResponse<Chat>> {
-  // mock 데이터로서 새로운 채팅방 생성 형태로 진행
-  const newChat: Chat = {
-    id: `chat_${Date.now()}`, // 채팅방 고유 식별자
-    name: '1:1 채팅', // 채팅방 이름
-    type: 'direct', // 채팅방 타입 (direct | group) : 현재는 1:1 만 지원
-    created_by: 'current', // 채팅방 생성한 유저의 ID
-    created_at: new Date().toISOString(), // 생성시간
-    updated_at: new Date().toISOString(), // 마지막 업데이트 시간
-  };
-  return { success: true, data: newChat };
+): Promise<ChatApiResponse<DirectChat>> {
+  try {
+    const currentUser = await getCurrentUser();
+
+    // 1단계: 기존 채팅방 찾기
+    const { data: existingChats, error: findError } = await supabase
+      .from('direct_chats')
+      .select('*')
+      .or(
+        `and(user1_id.eq.${currentUser.id},user2_id.eq.${participantId}),and(user1_id.eq.${participantId},user2_id.eq.${currentUser.id})`,
+      )
+      .limit(1);
+
+    if (findError) {
+      console.error('채팅방 검색 오류:', findError);
+      return { success: false, error: '채팅방을 찾을 수 없습니다.' };
+    }
+
+    if (existingChats && existingChats.length > 0) {
+      // 기존 채팅방 발견
+      return { success: true, data: existingChats[0] };
+    }
+
+    // 2단계: 새 채팅방 생성
+    const { data: newChat, error: createError } = await supabase
+      .from('direct_chats')
+      .insert({
+        user1_id: currentUser.id,
+        user2_id: participantId,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      // 중복 에러인 경우 기존 채팅방 다시 찾기
+      if (createError.code === '23505') {
+        const { data: existingChat } = await supabase
+          .from('direct_chats')
+          .select('*')
+          .or(
+            `and(user1_id.eq.${currentUser.id},user2_id.eq.${participantId}),and(user1_id.eq.${participantId},user2_id.eq.${currentUser.id})`,
+          )
+          .single();
+
+        return { success: true, data: existingChat };
+      }
+
+      console.error('채팅방 생성 오류:', createError);
+      return { success: false, error: '채팅방을 생성할 수 없습니다.' };
+    }
+
+    return { success: true, data: newChat };
+  } catch (error) {
+    console.error('findOrCreateDirectChat 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
 }
 
 /**
  * 채팅방 목록 조회
  */
 export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return { success: true, data: mockChats };
+  try {
+    const currentUser = await getCurrentUser();
+
+    // 사용자의 채팅방 목록 조회 (최신 메시지 순)
+    const { data: chats, error: chatsError } = await supabase
+      .from('direct_chats')
+      .select('*')
+      .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
+      .order('last_message_at', { ascending: false });
+
+    if (chatsError) {
+      console.error('채팅방 목록 조회 오류:', chatsError);
+      return { success: false, error: '채팅방 목록을 불러올 수 없습니다.' };
+    }
+
+    if (!chats || chats.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 각 채팅방의 마지막 메시지와 읽지 않은 메시지 수 조회
+    const chatListItems: ChatListItem[] = await Promise.all(
+      chats.map(async chat => {
+        // 상대방 사용자 ID
+        const otherUserId = chat.user1_id === currentUser.id ? chat.user2_id : chat.user1_id;
+
+        // 상대방 사용자 정보 조회 (profiles 테이블에서)
+        let otherUserInfo: ChatUser;
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, nickname, avatar_url')
+            .eq('id', otherUserId)
+            .single();
+
+          if (profileError || !profileData) {
+            // 조회 실패 시 기본값 사용
+            otherUserInfo = {
+              id: otherUserId,
+              email: `user-${otherUserId}@example.com`,
+              nickname: `User ${otherUserId.slice(0, 8)}`,
+              avatar_url: null,
+            };
+          } else {
+            // 실제 사용자 정보 사용
+            otherUserInfo = {
+              id: profileData.id,
+              email: `user-${profileData.id}@example.com`,
+              nickname: profileData.nickname,
+              avatar_url: profileData.avatar_url,
+            };
+          }
+        } catch (error) {
+          // 오류 시 기본값 사용
+          otherUserInfo = {
+            id: otherUserId,
+            email: `user-${otherUserId}@example.com`,
+            nickname: `User ${otherUserId.slice(0, 8)}`,
+            avatar_url: null,
+          };
+        }
+
+        // 마지막 메시지 조회 (재활성화)
+        let lastMessage = null;
+        try {
+          const { data: lastMessageData, error: lastMessageError } = await supabase
+            .from('direct_messages')
+            .select('content, created_at, sender_id')
+            .eq('chat_id', chat.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (!lastMessageError && lastMessageData) {
+            lastMessage = lastMessageData;
+          }
+        } catch (error) {
+          // 오류 시 null 유지
+        }
+
+        // 읽지 않은 메시지 수 조회 (수정: 상대방이 보낸 메시지 중에서 내가 읽지 않은 메시지)
+        let unreadCount = 0;
+        try {
+          const { count, error: unreadCountError } = await supabase
+            .from('direct_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('chat_id', chat.id)
+            .eq('is_read', false)
+            .neq('sender_id', currentUser.id); // 상대방이 보낸 메시지만
+
+          if (!unreadCountError && count !== null) {
+            unreadCount = count;
+          }
+        } catch (error) {
+          // 오류 시 0 유지
+        }
+
+        return {
+          id: chat.id,
+          other_user: otherUserInfo,
+          last_message: lastMessage
+            ? {
+                content: lastMessage.content,
+                created_at: lastMessage.created_at,
+                sender_nickname:
+                  lastMessage.sender_id === currentUser.id ? '재또지' : otherUserInfo.nickname,
+              }
+            : undefined,
+          unread_count: unreadCount || 0,
+        };
+      }),
+    );
+
+    return { success: true, data: chatListItems };
+  } catch (error) {
+    console.error('getChatList 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
 }
 
 /**
@@ -179,33 +243,143 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
  */
 export async function sendMessage(
   messageData: CreateMessageData,
-): Promise<ChatApiResponse<Message>> {
-  // 시뮬레이션으로 백엔드 비동기 느끼으로 0.5초 진행 대기
-  await new Promise(resolve => setTimeout(resolve, 500));
-  // Mock 데이터로 새로운 메시지를 생성
-  const newMessage: Message = {
-    id: `msg_${Date.now()}`, // 메시지 고유 식별자
-    chat_id: messageData.chat_id, // 채팅방 ID
-    sender_id: 'current', // 발신자 사용자 ID
-    content: messageData.content, // 메시지 내용
-    created_at: new Date().toISOString(), // 전송 시간
-    updated_at: new Date().toISOString(), // 수정 시간(편집 시)
-  };
+): Promise<ChatApiResponse<DirectMessage>> {
+  try {
+    const currentUser = await getCurrentUser();
 
-  return { success: true, data: newMessage };
+    // 0단계: 채팅방 존재 여부 확인
+    const { data: chat, error: chatError } = await supabase
+      .from('direct_chats')
+      .select('id')
+      .eq('id', messageData.chat_id)
+      .single();
+
+    if (chatError || !chat) {
+      console.error('채팅방 조회 오류:', chatError);
+      return { success: false, error: '채팅방을 찾을 수 없습니다.' };
+    }
+
+    // 1단계: 메시지 저장
+    const { data: newMessage, error: messageError } = await supabase
+      .from('direct_messages')
+      .insert({
+        chat_id: messageData.chat_id,
+        sender_id: currentUser.id,
+        content: messageData.content,
+        is_read: false,
+      })
+      .select()
+      .single();
+
+    if (messageError) {
+      console.error('메시지 전송 오류:', messageError);
+      console.error('오류 코드:', messageError.code);
+      console.error('오류 메시지:', messageError.message);
+      console.error('오류 세부사항:', messageError.details);
+      console.error('오류 힌트:', messageError.hint);
+      return { success: false, error: `메시지를 전송할 수 없습니다: ${messageError.message}` };
+    }
+
+    // 2단계: 채팅방의 마지막 메시지 시간 업데이트
+    const { error: updateError } = await supabase
+      .from('direct_chats')
+      .update({ last_message_at: new Date().toISOString() })
+      .eq('id', messageData.chat_id);
+
+    if (updateError) {
+      console.error('채팅방 업데이트 오류:', updateError);
+      // 메시지는 전송되었으므로 성공으로 처리
+    }
+
+    return { success: true, data: newMessage };
+  } catch (error) {
+    console.error('sendMessage 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
 }
 
 /**
- * 메세지 목록 조회
+ * 메시지 목록 조회
  *
  * @param chatId - 채팅방의 ID
  */
-export async function getMessages(chatId: string): Promise<ChatApiResponse<MessageDetail[]>> {
-  // 시뮬레이션으로 백엔드 비동기 느끼으로 0.5초 진행 대기
-  await new Promise(resolve => setTimeout(resolve, 500));
-  // Mock 데이터로서 해당 채팅방의 메시지들 전체 조회
-  const messages = mockMessages[chatId] || null;
-  return { success: true, data: messages };
+export async function getMessages(chatId: string): Promise<ChatApiResponse<DirectMessage[]>> {
+  try {
+    const currentUser = await getCurrentUser();
+
+    // 특정 채팅방의 메시지 목록 조회 (시간순)
+    // direct_messages 테이블에서 메시지 조회 시도
+    const { data: messages, error: messagesError } = await supabase
+      .from('direct_messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true });
+
+    if (messagesError) {
+      console.error('메시지 목록 조회 오류:', messagesError);
+      // 권한 문제인 경우 빈 배열 반환
+      if (messagesError.code === 'PGRST301' || messagesError.message.includes('permission')) {
+        return { success: true, data: [] };
+      }
+      return {
+        success: false,
+        error: `메시지를 불러올 수 없습니다: ${messagesError.message}`,
+      };
+    }
+
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 상대방이 보낸 메시지를 읽음 처리 (is_read = true로 업데이트)
+    try {
+      const { error: updateError } = await supabase
+        .from('direct_messages')
+        .update({
+          is_read: true,
+          read_at: new Date().toISOString(),
+        })
+        .eq('chat_id', chatId)
+        .eq('is_read', false)
+        .neq('sender_id', currentUser.id); // 상대방이 보낸 메시지만
+
+      if (updateError) {
+        // 오류가 있어도 메시지 조회는 계속 진행
+      } else {
+      }
+    } catch (error) {
+      // 오류가 있어도 메시지 조회는 계속 진행
+    }
+
+    // 메시지 데이터를 DirectMessage 형태로 변환
+    const messageDetails: DirectMessage[] = messages.map(message => ({
+      id: message.id,
+      chat_id: message.chat_id,
+      sender_id: message.sender_id,
+      content: message.content,
+      is_read: message.is_read,
+      read_at: message.read_at,
+      created_at: message.created_at,
+      sender: {
+        id: message.sender_id,
+        email: `user-${message.sender_id}@example.com`,
+        nickname:
+          message.sender_id === currentUser.id ? '나' : `User ${message.sender_id.slice(0, 8)}`,
+        avatar_url: null,
+      },
+    }));
+
+    return { success: true, data: messageDetails };
+  } catch (error) {
+    console.error('getMessages 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
 }
 
 /**
@@ -215,14 +389,88 @@ export async function getMessages(chatId: string): Promise<ChatApiResponse<Messa
  * @param searchTerm - 검색할 닉네임 또는 이메일
  */
 export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<ChatUser[]>> {
-  // 시뮬레이션으로 백엔드 비동기 느끼으로 0.3초 진행 대기
-  await new Promise(resolve => setTimeout(resolve, 300));
-  if (!searchTerm.trim()) {
-    return { success: true, data: [] };
-  }
-  const filteredUser = mockUser.filter(item =>
-    item.nickname.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  try {
+    if (!searchTerm.trim()) {
+      return { success: true, data: [] };
+    }
 
-  return { success: true, data: filteredUser };
+    // 사용자 검색 (profiles 테이블에서 검색)
+
+    const { data: profiles, error: searchError } = await supabase
+      .from('profiles')
+      .select('id, nickname, avatar_url, created_at')
+      .ilike('nickname', `%${searchTerm}%`)
+      .limit(10);
+
+    if (searchError) {
+      console.error('사용자 검색 오류:', searchError);
+      return {
+        success: false,
+        error: `사용자 검색 중 오류가 발생했습니다: ${searchError.message}`,
+      };
+    }
+
+    if (!profiles || profiles.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 사용자 데이터를 ChatUser 형태로 변환
+    const chatUsers: ChatUser[] = profiles.map(profile => ({
+      id: profile.id,
+      email: `user-${profile.id}@example.com`, // email 필드가 없으므로 기본값 사용
+      nickname: profile.nickname,
+      avatar_url: profile.avatar_url,
+    }));
+
+    return { success: true, data: chatUsers };
+  } catch (error) {
+    console.error('searchUsers 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 1:1 채팅방 나가기
+ * - 사용자가 특정 채팅방에서 나갈 때 호출
+ * - 채팅방을 완전히 삭제하는 것이 아니라 논리적 삭제 처리
+ * - 현재는 채팅방을 완전히 삭제 (향후 논리적 삭제로 변경 가능)
+ *
+ * @param chatId - 나갈 채팅방 ID
+ */
+export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<boolean>> {
+  try {
+    const currentUser = await getCurrentUser();
+
+    // 1단계: 채팅방 소유권 확인
+    const { data: chat, error: chatError } = await supabase
+      .from('direct_chats')
+      .select('*')
+      .eq('id', chatId)
+      .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
+      .single();
+
+    if (chatError || !chat) {
+      console.error('채팅방 조회 오류:', chatError);
+      return { success: false, error: '채팅방을 찾을 수 없습니다.' };
+    }
+
+    // 2단계: 채팅방 삭제 (향후 논리적 삭제로 변경 가능)
+    const { error: deleteError } = await supabase.from('direct_chats').delete().eq('id', chatId);
+
+    if (deleteError) {
+      console.error('채팅방 삭제 오류:', deleteError);
+      return { success: false, error: '채팅방 나가기에 실패했습니다.' };
+    }
+
+    return { success: true, data: true };
+  } catch (error) {
+    console.error('exitDirectChat 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
 }
