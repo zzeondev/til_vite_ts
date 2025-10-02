@@ -1120,4 +1120,4 @@ export default DirectChatList;
 
 ## DirectChatRoom.tsx 업데이트
 
-- /src/components/chat/direct/DirectChatRoom.tsx
+- /src/components/chat/direct/DirectChatRoom.tsx 업데이트
