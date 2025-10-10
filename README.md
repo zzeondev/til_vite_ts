@@ -1118,6 +1118,6 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
 export default DirectChatList;
 ```
 
-## DirectChatRoom.tsx 업데이트.
+## DirectChatRoom.tsx 업데이트
 
 - /src/components/chat/direct/DirectChatRoom.tsx 업데이트
