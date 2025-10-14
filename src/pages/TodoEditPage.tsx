@@ -23,7 +23,7 @@ function TodoEditPage() {
   const [toggleLoading, setToggleLoading] = useState(false);
 
   // 이미지 파일 보관
-  const [imgaeFiles, setImageFiles] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   // 이미지 파일 보관용 업데이트
   const handleImageChange = useCallback((images: File[]) => {
     setImageFiles(images);
@@ -63,6 +63,7 @@ function TodoEditPage() {
           navigate('/todos');
           return;
         }
+
         setTodo(todoData);
         setTitle(todoData.title);
         if (todoData.content) {
@@ -91,8 +92,8 @@ function TodoEditPage() {
         alert('오류가 발생하였습니다. 잠시 후 다시 시도해 주세요.');
       }
     } catch (error) {
-      console.log('상태 변경 실패 : ', error);
-      alert('에러가 발생하였습니다.');
+      console.log('상태 변경 실패: ', error);
+      alert('에러가 발생하였습니다');
     } finally {
       setToggleLoading(false);
     }
@@ -101,37 +102,39 @@ function TodoEditPage() {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
   };
-
   // const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
   //   setContent(e.target.value);
   // };
   const handleContentChange = (value: string) => {
     setContent(value);
   };
+
   // 아래는 파일도 저장하도록 업데이트
   const handleSave = async () => {
     if (!todo) return;
+
     if (!title.trim()) {
       alert('제목을 입력하세요.');
       return;
     }
+
     try {
       setSaving(true);
 
       // 파일 업데이트 처리
       // 1. 기존의 content 내용을 보관
-      // <img src="blob:~~" /> 새로 업로드 한 이미지인 경우
-      // <img src="http://~" /> 기존의 storage 에 있는 경우
+      // <img src="blob:~~`/>  새로이 업로드 한 이미지인 경우
+      // <img src="http://~"   기존의 storage 에 있는 경우
       let finalContent = content;
 
       // 2. blob 파일이 존재한다면
-      if (imgaeFiles.length > 0) {
+      if (imageFiles.length > 0) {
         // 모든 blob: 글자를 찾습니다.
         const blobUrlPattern = /blob:[^"'\s]+/g;
         const blobUrls = finalContent.match(blobUrlPattern) || [];
         // 혹시라도 이미지 임시 개수와 보관하고 있는 파일개수가 다른 부분 고려
-        for (let i = 0; i < blobUrls.length && i < imgaeFiles.length; i++) {
-          const imageFile = imgaeFiles[i];
+        for (let i = 0; i < blobUrls.length && i < imageFiles.length; i++) {
+          const imageFile = imageFiles[i];
           const blobUrl = blobUrls[i];
           // 아래에서 업로드 합니다.
           try {
@@ -197,7 +200,7 @@ function TodoEditPage() {
         }
       }
 
-      // 현재 finalContent 는 많은 내용이 변경되었음 (기존 파일 삭제 또는 신규 파일 추가)
+      // 현재 finalContent 는 많은 내용이 변경되었음. (기존파일 삭제 또는 신규 파일 추가)
       const result = await updateTodo(todo.id, { title, content: finalContent });
       if (result) {
         alert('할 일이 성공적으로 수정되었습니다.');
@@ -213,8 +216,8 @@ function TodoEditPage() {
     }
   };
 
-  const handleCancle = () => {
-    // 바로 취소하지 않음
+  const handleCancel = () => {
+    // 바로 취소하지 않음.
     if (title !== todo?.title || content !== (todo?.content || '')) {
       if (window.confirm('수정 중인 내용이 있습니다. 정말 취소하시겠습니까?')) {
         navigate('/todos');
@@ -245,6 +248,7 @@ function TodoEditPage() {
         <h2 className="page-title"> 할 일 수정</h2>
         {profile?.nickname && <p className="page-subtitle">{profile.nickname}님의 할 일</p>}
       </div>
+      {/* 상세 내용 */}
       <div className="card">
         <div className="form-group">
           <label className="form-label">완료 상태</label>
@@ -260,7 +264,7 @@ function TodoEditPage() {
                 opacity: toggleLoading || saving ? 0.6 : 1,
               }}
             />
-            <span>{todo.completed ? ' ✅ 완료됨' : ' ⏳ 진행 중'}</span>
+            <span> {todo.completed ? '✅ 완료됨' : '⏳ 진행 중'}</span>
             {toggleLoading && (
               <span style={{ color: 'var(--gray-500)', fontSize: '14px' }}>처리 중...</span>
             )}
@@ -332,17 +336,17 @@ function TodoEditPage() {
             </div>
           </div>
         </div>
-        {/* 버튼 */}
+        {/* 버튼들 */}
         <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
           <button
             className="btn btn-secondary"
             disabled={saving || toggleLoading}
-            onClick={handleCancle}
+            onClick={handleCancel}
           >
             취소
           </button>
           <button
-            className="btn btn-secondary"
+            className="btn btn-primary"
             disabled={saving || toggleLoading}
             onClick={handleSave}
           >

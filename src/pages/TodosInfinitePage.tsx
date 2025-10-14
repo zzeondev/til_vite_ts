@@ -169,7 +169,7 @@ function TodosInfinitePage() {
       <div>
         <div className="page-header">
           <h2 className="page-title">🔄 무한 스크롤 Todo 목록</h2>
-          <p className="page-subtitle">스크롤하여 더 많은 할 일을 확인하세요</p>
+          <p className="page-subtitle">스크롤하여 더 많은 할일을 확인하세요</p>
         </div>
 
         <div className="container">

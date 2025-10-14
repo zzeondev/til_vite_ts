@@ -8,7 +8,7 @@ type TodoWriteProps = {
   handleChangePage: (page: number) => void;
 };
 const TodoWrite = ({ handleChangePage }: TodoWriteProps): JSX.Element => {
-  // Context 를 사용함
+  // Context 를 사용함.
   const { addTodo } = useTodos();
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
@@ -60,7 +60,7 @@ const TodoWrite = ({ handleChangePage }: TodoWriteProps): JSX.Element => {
 
   return (
     <div className="card">
-      <h2 style={{ marginBottom: 'var(--space-4)', color: 'var(--gray-800)' }}>✏️ 할 일 작성</h2>
+      <h2 style={{ marginBottom: 'var(--space-4)', color: 'var(--gray-800)' }}>✏️ 할일 작성</h2>
       <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
         <input
           type="text"
@@ -69,7 +69,7 @@ const TodoWrite = ({ handleChangePage }: TodoWriteProps): JSX.Element => {
           onKeyDown={e => handleKeyDown(e)}
           className="form-input"
           style={{ flex: 1 }}
-          placeholder="새로운 할 일을 추가해주세요."
+          placeholder="새로운 할일을 추가해주세요."
         />
         <button onClick={handleSave} className="btn btn-primary" disabled={saving}>
           {saving ? '⏳ 등록 중...' : '등록'}

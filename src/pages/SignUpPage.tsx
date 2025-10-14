@@ -46,7 +46,7 @@ function SignUpPage() {
     setEmailCheckStatus('checking');
     setEmailCheckMessage('이메일 중복 확인 중...');
     try {
-      // DB 에 직접 이메일 글자를 보내고 중복확인 진행
+      // DB 에 직접 이메일 글자를 보내고 중복확인 진행.
       const result = await checkEmailExists(email);
       if (result.error) {
         setEmailCheckMessage(`오류 : ${result.error}`);
@@ -72,14 +72,14 @@ function SignUpPage() {
       return;
     }
     if (nickName.trim().length < 2) {
-      setNicknameCheckMessage('닉네임을 2자 이상 입력해 주세요.');
+      setNicknameCheckMessage('닉네임은 2자 이상 입력해 주세요.');
       setNicknameCheckStatus('taken');
       return;
     }
     setNicknameCheckStatus('checking');
     setNicknameCheckMessage('닉네임 중복 확인 중...');
     try {
-      // DB 에 직접 닉네임 글자를 보내고 중복확인 진행
+      // DB 에 직접 닉네임 글자를 보내고 중복확인 진행.
       const result = await checkNicknameExists(nickName);
       if (result.error) {
         setNicknameCheckMessage(`오류 : ${result.error}`);
@@ -92,8 +92,8 @@ function SignUpPage() {
         setNicknameCheckStatus('available');
       }
     } catch (error) {
-      setNicknameCheckStatus('taken');
       setNicknameCheckMessage('닉네임 중복 확인 중 오류가 발생했습니다.');
+      setNicknameCheckStatus('taken');
     }
   };
 
@@ -147,7 +147,7 @@ function SignUpPage() {
   return (
     <div>
       <div className="page-header">
-        <h2 className="page-title">회원가입</h2>
+        <h2 className="page-title">📚 회원가입</h2>
         <p className="page-subtitle">새 계정을 만들어 보세요.</p>
       </div>
       <div className="card" style={{ maxWidth: '400px', margin: '0 auto' }}>
@@ -155,7 +155,7 @@ function SignUpPage() {
           <div className="form-group">
             <label className="form-label">이메일</label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              {/* 이메일 입력 태그 */}
+              {/* 이메일 입력태그 */}
               <input
                 type="email"
                 value={email}
@@ -166,12 +166,12 @@ function SignUpPage() {
                     setEmailCheckMessage('');
                   }
                 }}
-                placeholder="이메일을 입력하세요."
+                placeholder="이메일"
                 className="form-input"
-                required
                 style={{ flex: 1 }}
+                required
               />
-              {/* 이메일 중복 체크 버튼 태그*/}
+              {/* 이메일 중복체크버튼태그 */}
               <button
                 type="button"
                 onClick={handleEmailCheck}
@@ -226,7 +226,7 @@ function SignUpPage() {
           <div className="form-group">
             <label className="form-label">닉네임</label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              {/* 닉네임 입력 태그 */}
+              {/* 닉네임 입력태그 */}
               <input
                 type="text"
                 value={nickName}
@@ -242,7 +242,7 @@ function SignUpPage() {
                 style={{ flex: 1 }}
                 required
               />
-              {/* 닉네임 중복 체크 버튼 태그 */}
+              {/* 닉네임 중복체크버튼태그 */}
               <button
                 type="button"
                 onClick={handleNicknameCheck}
@@ -354,24 +354,24 @@ function SignUpPage() {
         </form>
 
         {/* SNS 로그인 영역 */}
-        <div style={{ display: 'flex', alignItems: 'center', margin: 'var(--space-6) ' }}>
+        <div style={{ display: 'flex', alignItems: 'center', margin: 'var(--space-6) 0' }}>
           <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--gray-300)' }}></div>
           <span style={{ padding: '0 var(--space-4)', fontSize: '14px' }}>또는</span>
           <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--gray-300)' }}></div>
         </div>
-        {/* 카카오 로그인 버튼 : 오류 메시지는 사용자도 볼 수 있어야 함*/}
+
+        {/* 카카오 로그인 버튼 : 오류 메시지는 사용자도 볼 수 있어야 함.*/}
         <KakaoLoginButton
           onError={error => setMsg(`카카오 로그인 오류 : ${error}`)}
           onSuccess={message => setMsg(message)}
         />
-        {/* 구글 로그인 버튼 : 오류 메시지는 사용자도 볼 수 있어야 함 */}
-        <div style={{ marginTop: 'var(--space-3' }}>
+        {/* 구글 로그인 버튼 :  오류 메시지는 사용자도 볼 수 있어야 함.  */}
+        <div style={{ marginTop: 'var(--space-3)' }}>
           <GoogleLoginButton
             onError={error => setMsg(`구글 로그인 오류 : ${error}`)}
             onSuccess={message => setMsg(message)}
           />
         </div>
-
         {/* 메시지 출력 */}
         {msg && (
           <p

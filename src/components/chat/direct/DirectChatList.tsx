@@ -11,9 +11,9 @@ import { supabase } from '../../../lib/supabase';
 
 // Props 정의
 interface DirectChatListProps {
-  onChatSelect: (chatId: string) => void; // 채팅방 선택시 호출되는 콜백 함수
+  onChatSelect: (chatId: string) => void; // 채팅방 선택 시 호출되는 콜백 함수
   onCreateChat: () => void; // 새 채팅방 생성시 호출되는 콜백 함수
-  selectedChatId?: string; // 현재 선택된 채팅방 ID
+  selectedChatId?: string; // 현재 선택된 채팅방의 ID
 }
 
 const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectChatListProps) => {
@@ -28,14 +28,14 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
   // 최초에 컴포넌트 마운트시 채팅 목록 로드
   useEffect(() => {
     loadChats();
-  }, [loadChats]); // 신규 또는 메세지 전송 등으로 업데이트 시 목록 호출
+  }, [loadChats]); // 신규 또는 메세지 전송 등으로 업데이트 시 채팅목록 호촐
 
   // Supabase Realtime 으로 실시간 동기화
   useEffect(() => {
     const subscription = supabase
       .channel('direct_chats_changes') // direct_chats_changes 라는 이름으로 채널을 만든다.
       .on(
-        'postgres_changes', // PostgreSQL 데이터 베이스의 변경사항을 알려주는 이벤트명
+        'postgres_changes', // PostgreSQL 데이터 베이스의 변경사항을 알려주는 이벤트 명
         {
           event: '*', // 모든 이벤트 타입을 감지함. (INSERT, UPDATE, DELETE..)
           schema: 'public', // 스키마가 public 인 것이 대상
@@ -60,7 +60,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
   useEffect(() => {
     // 사용자 검색어가 만약 있다면
     if (searchTerm.trim()) {
-      // console.log('DB 에서 사용자 닉네임을 실시간 검색함...');
+      // console.log('DB 에서 사용자 닉네임을 실시간 검색 함..');
       // 검색어가 입력이 되면 Service 의 사용자 검색 API 를 호출해야 한다.
       searchUsers(searchTerm);
     }
@@ -97,7 +97,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
    * 4. 사용자 검색어 초기화
    */
   const handleUserSelect = async (user: ChatUser) => {
-    // 상대방 선택됨
+    // 상대방 선택됨.
     // 상대방의 id 를 이용해서 채팅방을 생성해야 합니다.
     const chatId = await createDirectChat(user.id);
     if (chatId) {
@@ -107,11 +107,11 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
     }
   };
 
-  // 에러 상태일 때 에러 메세지 표시
+  // 에러 상태일 때 에러 메시지 표시
   if (error) {
     return (
       <div className="chat-list">
-        <div className="error-message">
+        <div className="error-message ">
           <p>오류 : {error}</p>
           <button onClick={loadChats}>다시 시도</button>
         </div>
@@ -124,7 +124,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
       {/* 채팅 목록 헤더 - 제목과 새 채팅 버튼 */}
       <div className="chat-list-header">
         <h2>1 : 1 채팅</h2>
-        {/* 사용자가 새 채팅 생성시 showUserSearch 를 true 로 변경 */}
+        {/* 사용자가 새채팅 생성시 showUserSearch 를 true 로 변경 */}
         <button className="new-chat-btn" onClick={() => setShowUserSearch(!showUserSearch)}>
           새 채팅
         </button>
@@ -146,7 +146,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
           <div className="search-result">
             {/* 검색된 사용자 출력 */}
             {users.map(user => (
-              // 사용자 중 대화상대를 선택할 수 있음 : handleUserSelect
+              // 사용자 중 대화상대를 선택할 수 있음. : handleUserSelect
               <div key={user.id} className="user-item" onClick={() => handleUserSelect(user)}>
                 {/* 사용자 아바타 */}
                 <div className="user-avatar">
@@ -188,22 +188,22 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
         ) : (
           // 채팅 목록 렌더링
           chats.map(chat => (
-            //개별 채팅 아이템
+            // 개별 채팅 아이템
             <div
               key={chat.id}
-              className={`chat-item ${selectedChatId === chat.id ? 'selected' : ''} `}
+              className={`chat-item ${selectedChatId === chat.id ? 'selected' : ''}`}
+              // 기존 채팅방 목록에서 채팅방 선택
               onClick={() => onChatSelect(chat.id)}
             >
               {/* 채팅 상대방 아바타 */}
               <div className="chat-avatar">
                 {chat.other_user.avatar_url ? (
-                  // 상대방 아바타 이미지 있는경우
+                  // 상대방 아바타 이미지 있는 경우
                   <img src={chat.other_user.avatar_url} alt={chat.other_user.nickname} />
                 ) : (
-                  // 상대방 아바타 이미지 없는 경우
+                  // 상대방 아바타 이미지 없는 경운
                   <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
                 )}
-
                 {/* 읽지 않은 메시지 개수 배지 */}
                 {chat.unread_count > 0 && <div className="unread-badge">{chat.unread_count}</div>}
               </div>
@@ -216,7 +216,6 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
                     {chat.last_message ? formatTime(chat.last_message.created_at) : ''}
                   </div>
                 </div>
-
                 {/* 마지막 메시지 미리보기 */}
                 <div className="chat-preview">
                   {chat.last_message ? (

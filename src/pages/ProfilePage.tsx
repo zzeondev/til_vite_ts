@@ -35,14 +35,12 @@ function ProfilePage() {
   // 사용자가 새로운 이미지 선택시 즉, 편집 중인 경우 원본 URL 보관용 문자열
   const [originalAvatarUrl, setOriginalAvartarUrl] = useState<string | null>(null);
   // 이미지 제거 요청 상태(그러나, 실제 file 제거는 수정확인 버튼 눌렀을 때 처리)
-  const [imageRemovalRequest, setImageRemovalRequest] = useState<boolean>(false);
+  const [imageRemovalRequest, setImageRemovalReauest] = useState<boolean>(false);
   // input type="file" 태그 참조
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 비밀번호 변경 관련 상태
-  // 새 비밀번호
   const [newPassword, setNewPassword] = useState<string>('');
-  // 새 비밀번호 확인
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [passwordMessage, setPasswordMessage] = useState<string>('');
 
@@ -119,7 +117,7 @@ function ProfilePage() {
       // 업데이트 성공시 초기화 진행
       setPreviewImage(null);
       setSelectedFile(null);
-      setImageRemovalRequest(false);
+      setImageRemovalReauest(false);
       setOriginalAvartarUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -138,6 +136,7 @@ function ProfilePage() {
     const message =
       '카카오 계정 연동을 해제하시겠습니까? \n\n 연동 해제 후에는 카카오로 다시 로그인 할 수 없습니다.';
     const isConfirm = confirm(message);
+
     if (isConfirm) {
       const result = await unlinkKakaoAccount();
       if (result.success) {
@@ -145,7 +144,7 @@ function ProfilePage() {
         // 연동 해제 후 로그아웃 처리
         window.location.href = '/signin';
       } else if (result.error) {
-        alert(`연동 해제 실패 : ${result.error}`);
+        alert(`연동 해제 실패: ${result.error}`);
       }
     }
   };
@@ -155,6 +154,7 @@ function ProfilePage() {
     const message =
       '구글 계정 연동을 해제하시겠습니까? \n\n 연동 해제 후에는 구글로 다시 로그인 할 수 없습니다.';
     const isConfirm = confirm(message);
+
     if (isConfirm) {
       const result = await unlinkGoogleAccount();
       if (result.success) {
@@ -162,7 +162,7 @@ function ProfilePage() {
         // 연동 해제 후 로그아웃 처리
         window.location.href = '/signin';
       } else if (result.error) {
-        alert(`연동 해제 실패 : ${result.error}`);
+        alert(`연동 해제 실패: ${result.error}`);
       }
     }
   };
@@ -206,11 +206,13 @@ function ProfilePage() {
     // 카카오 또는 구글 로그인 사용자인지 확인
     const isKakaoUser = user?.app_metadata.provider === 'kakao';
     const isGoogleUser = user?.app_metadata.provider === 'google';
+
     const message: string = isKakaoUser
       ? '😥 카카오 계정 연동을 해제하고 계정을 삭제하시겠습니까? \n\n 복구가 불가능합니다.'
       : isGoogleUser
         ? '😥 구글 계정 연동을 해제하고 계정을 삭제하시겠습니까? \n\n 복구가 불가능합니다.'
         : '😥 계정을 완전히 삭제하시겠습니까? \n\n 복구가 불가능합니다.';
+
     let isConfirm = false;
     isConfirm = confirm(message);
 
@@ -248,7 +250,7 @@ function ProfilePage() {
 
     setSelectedFile(file);
     // 새 이미지 선택 시 이미지 제거 요청 상태 초기화
-    setImageRemovalRequest(false);
+    setImageRemovalReauest(false);
   };
   // 이미지 파일 선택 취소
   const handleCancelUpload = () => {
@@ -267,7 +269,7 @@ function ProfilePage() {
     }
     // 즉시 제거하지 않습니다.
     // 제거하라는 상태만 별도로 관리함.
-    setImageRemovalRequest(true);
+    setImageRemovalReauest(true);
     setPreviewImage(null);
     setSelectedFile(null);
     if (fileInputRef.current) {
@@ -388,7 +390,7 @@ function ProfilePage() {
               color: 'var(--gray-700)',
             }}
           >
-            {user?.created_at && new Date(user?.created_at).toLocaleString()}
+            {user?.created_at && new Date(user.created_at).toLocaleString()}
           </div>
         </div>
       </div>
@@ -652,7 +654,7 @@ function ProfilePage() {
                         disabled={uploading}
                         className={`btn ${uploading ? 'btn-secondary' : 'btn-success'}`}
                         onClick={() => {
-                          setImageRemovalRequest(false);
+                          setImageRemovalReauest(false);
                         }}
                       >
                         제거 취소
@@ -768,7 +770,7 @@ function ProfilePage() {
                 setNickName(profileData?.nickname || '');
                 setPreviewImage(null);
                 setSelectedFile(null);
-                setImageRemovalRequest(false);
+                setImageRemovalReauest(false);
                 setOriginalAvartarUrl(null);
                 if (fileInputRef.current) {
                   fileInputRef.current.value = '';
@@ -786,12 +788,11 @@ function ProfilePage() {
                 setEdit(true);
                 // 편집 시작 시 원본 이미지 URL 저장
                 setOriginalAvartarUrl(profileData?.avatar_url || null);
-                setImageRemovalRequest(false);
+                setImageRemovalReauest(false);
               }}
             >
               정보수정
             </button>
-
             {/* 카카오 사용자에게만 연동 해제 버튼 표시 */}
             {user?.app_metadata?.provider === 'kakao' && (
               <button

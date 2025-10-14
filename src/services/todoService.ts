@@ -140,41 +140,45 @@ export const updateTodo = async (
 };
 
 // Todo 삭제
-// content 에 포함된 파일을 제거하고 나서 내용을 삭제함
+// content 에 포함된 파일을 제거하고 나서 내용을 삭제함.
 export const deleteTodo = async (id: number): Promise<void> => {
   try {
     // 1. 먼저 삭제할 todo의 content 에서 이미지의 url 만 추출한다.
     const { data: todo, error: fetchError } = await supabase
       .from('todos')
-      .select('content,user_id')
+      .select('content, user_id')
       .eq('id', id)
       .single();
+
     if (fetchError) {
       throw new Error(`deleteTodo fetch 오류 : ${fetchError.message}`);
     }
-
-    //2. content 에서 이미지 URL을 추출
+    // 2. content 에서 이미지 URL을 추출
     if (todo.content) {
       // 정규 표현식으로 특정 패턴의 글자를 알아낸다.
       const imageUrlPattern = /https:\/\/[^"'\s]+\.(jpg|jpeg|png|gif|webp|svg)/gi;
       const imageUrls = todo.content.match(imageUrlPattern) || [];
       // 배열의 반복으로 요소를 찾아내는 법
-      // for , for in , for of 문 중 가장 배열에 최적화 for 문은? ( for of )
-      // imageUrls 에서 url 을 찾아서 파일 삭제 supabase 실행함
+      // imageUrls 에서 url 을 찾아서 파일 삭제 supabase 실행함.
       for (const url of imageUrls) {
         try {
+          // url : https://erontyifxxztudowhees.supabase.co/storage/v1/object/public/todo-images/6b66829c-ec6c-4750-ad15-90641c3cb0fe/6b66829c-ec6c-4750-ad15-90641c3cb0fe_1758243951105_icon.png
           const urlParts = url.split('/');
-          // todo-images 라는 버킷이 몇번째 인지를 알아냄
-          // 버킷 다음이 실제 파일의 경로가 됨
+          // urlParas : [ "https:",  "", "erontyifxxztudowhees.supabase.co"....]
+          // todo-images 라는 버킷이 몇번째 인지를 알아냄.
+          // 버킷 다음이 실제 파일의 경로가 됨.
           const bucketIndex = urlParts.findIndex((item: string) => item === 'todo-images');
+
           // todo-images 의 인덱스를 찾았으므로 실제 파일 경로가 있는지 검사
-          // 만약 없다면 bucketIndex 가 -1 이라고 담겨짐
+          // 만약 없다면 bucketIndex 가  -1 이라고 담겨짐
           if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
+            // 6b66829c-ec6c-4750-ad15-90641c3cb0fe/6b66829c-ec6c-4750-ad15-90641c3cb0fe_1758243951105_icon.png
             // 삭제 되어야 할 파일 경로 및 파일명
             const filePath = urlParts.slice(bucketIndex + 1).join('/');
             const { error: deleteError } = await supabase.storage
               .from('todo-images')
               .remove([filePath]);
+
             if (deleteError) {
               console.log(`이미지 파일 삭제 실패 : ${filePath}`, deleteError.message);
             }

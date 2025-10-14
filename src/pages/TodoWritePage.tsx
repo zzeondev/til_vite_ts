@@ -11,7 +11,7 @@ function TodoWritePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // 사용자 입력내용
+  // 사용자 입력 내용
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   // 데이터가 추가 되고 있는지의 상태
@@ -63,20 +63,21 @@ function TodoWritePage() {
       let finalContent = content; // <img src="blob:~~`/>
       // 2. files 이 존재한다면
       if (imageFiles.length > 0) {
-        // 모든 blob : 글자를 찾습니다.
+        // 모든 blob: 글자를 찾습니다.
         const blobUrlPattern = /blob:[^"'\s]+/g;
         const blobUrls = finalContent.match(blobUrlPattern) || [];
 
-        // 혹시라도 이미지 임시 개수와 보관하고 있는 파일 개수가 다른 부분 고려
+        // 혹시라도 이미지 임시 개수와 보관하고 있는 파일개수가 다른 부분 고려
         for (let i = 0; i < blobUrls.length && i < imageFiles.length; i++) {
           const imageFile = imageFiles[i];
           const blobUrl = blobUrls[i];
           // 아래에서 업로드 합니다.
           try {
             // 파일명을 생성한다.
-            const timestamp = Date.now() + i; // 각 이미지 마다 다른 시간 글자
+            const timestamp = Date.now() + i; // 각 이미지 마다 다른 시간글자
+            // todo-images 저장소 폴더명생성 / 파일명 생성
 
-            // 한글 파일명 또는 특수 기호 처리
+            // 한글 파일명 또는 특수기호 처리
             const goodFileName = (filename: string) => {
               const lastDotIndex = filename.lastIndexOf('.');
               const name = lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename;
@@ -109,10 +110,9 @@ function TodoWritePage() {
             };
 
             const safeFileName = goodFileName(imageFile.name);
-            // todo-images 저장소 폴더명 생성 / 파일명 생성
             const fileName = `${user!.id}_${timestamp}_${safeFileName}`;
             const filePath = `${user!.id}/${fileName}`;
-            // supabase에 실제로 업로드
+            // supabase 에 실제 업로드
             // 폴더가 있으면 재활용, 없으면 자동 생성
             const { error } = await supabase.storage
               .from('todo-images')

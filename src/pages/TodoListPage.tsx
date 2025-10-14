@@ -1,15 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { getProfile } from '../lib/profile';
-import type { Profile, Todo } from '../types/TodoType';
-import { TodoProvider, useTodos } from '../contexts/TodoContext';
-import TodoWrite from '../components/todos/TodoWrite';
-import TodoList from '../components/todos/TodoList';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Pagination from '../components/Pagination';
 import TodoWriteBox from '../components/todos/TodoWriteBox';
-import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { TodoProvider, useTodos } from '../contexts/TodoContext';
+import { getProfile } from '../lib/profile';
+import type { Profile, Todo } from '../types/TodoType';
 
-// 추후 컨포넌트로 빼기
+// 용서하세요. 나중에 추출하세요. ^^
 type TodoItemProps = {
   todo: Todo;
   index: number;
@@ -51,13 +49,13 @@ const TodoItemBox = ({ todo, index }: TodoItemProps) => {
   );
 };
 
-// 추후 컨포넌트로 빼기
+// 용서하세요. 나중에 추출하세요. ^^
 const TodoListBox = () => {
   const { user } = useAuth();
   // 전체 할일 목록 가져오기
   const { todos } = useTodos();
   return (
-    <ul className="toto-list">
+    <ul className="todo-list">
       {todos.map((item, index) => (
         <TodoItemBox key={item.id} todo={item} index={index} />
       ))}

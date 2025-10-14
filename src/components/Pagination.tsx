@@ -83,6 +83,7 @@ const Pagination = ({
         </span>
         개 표시
       </div>
+
       {/* 페이지 번호들 */}
       <div className="pagination-controls">
         <button

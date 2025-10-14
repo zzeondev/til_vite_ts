@@ -10,7 +10,6 @@ import type { Session, User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { supabase } from '../lib/supabase';
 import type { DeleteRequestInsert } from '../types/TodoType';
-import { redirect } from 'react-router-dom';
 
 // 1. 인증 컨텍스트 타입
 type AuthContextType = {
@@ -122,13 +121,15 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   };
 
   // 이메일 중복 확인 함수
-  // - 회원가입 시에 이메일을 먼저 파악한 후, 회원가입 시도
+  // - 회원 가입시에 이메일을 먼저 파악 후, 회원가입 시도
   // - 결과에 따라서 메시지를 다양하게 출력을 한다 라는 시나리오
-  // - 좀 위험한 것은 error.message 를 문자열로 비교한 것이 좀 불안함
+  // - 좀 위험한 것은 error.messge 를 문자열로 비교한 것이 좀 불안함.
+
   const checkEmailExists: AuthContextType['checkEmailExists'] = async email => {
     // PostgreSQL Function
     try {
       const { error, data } = await supabase.rpc('check_email_exists', { email_param: email });
+
       if (error) {
         return { exists: false, error: '이메일 확인 중 오류가 발생했습니다.' };
       }
@@ -165,7 +166,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    // 오류발생시 체크 해보자
+    // 오류발생시 체크 해보자.
     if (error) {
       return { error: error.message };
     }
@@ -182,7 +183,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    // 오류발생시 체크 해보자
+    // 오류발생시 체크 해보자.
     if (error) {
       return { error: error.message };
     }
@@ -261,10 +262,11 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       if (newPassword.length < 6) {
         return { error: '비밀번호는 최소 6자 이상이어야 합니다.' };
       }
-      // Supabase 에서 비밀번호 업데이트
+      // Supabase에서 비밀번호 업데이트
       const { error } = await supabase.auth.updateUser({ password: newPassword });
+
       if (error) {
-        console.log('비밀번호 변경 실패 : ', error.message);
+        console.log('비밀번호 변경 실패: ', error.message);
         return { error: '비밀번호 변경에 실패했습니다.' };
       }
       return {
@@ -272,7 +274,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         message: '비밀번호가 성공적으로 변경되었습니다.',
       };
     } catch (err) {
-      console.log('비밀번호 변경 오류 : ', err);
+      console.log('비밀번호 변경 오류: ', err);
       return { error: '비밀번호 변경 중 오류가 발생했습니다.' };
     }
   };

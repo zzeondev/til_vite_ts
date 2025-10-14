@@ -57,7 +57,7 @@ a.btn:focus {
 }
 
 /* ===== List Styles ===== */
-/* 통상 ul 은 모양없이 진행함 */
+/* 통상 ul 은 모양없이 진행함. */
 /* ol 은 order List 로서 순서가 있는 목록 */
 ul,
 li {
@@ -400,6 +400,28 @@ textarea:focus {
   background-color: var(--primary-100);
   outline: 2px solid var(--primary-500);
   outline-offset: 2px;
+}
+
+/* 알림 배지 스타일 */
+.notification-badge {
+  position: relative;
+  display: inline-block;
+  margin-left: 6px;
+  color: #ff4444;
+  font-size: 12px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* ===== Loading States ===== */
@@ -844,7 +866,7 @@ textarea:focus {
   outline: none !important;
 }
 
-/* ===== PagiNation Styles ===== */
+/* ===== PageNation Styles ===== */
 .pagination-container {
   display: 'flex';
   align-items: 'center';

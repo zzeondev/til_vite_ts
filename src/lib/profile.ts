@@ -22,7 +22,7 @@ const createProfile = async (newUserProfile: ProfileInsert): Promise<boolean> =>
       return false;
     }
 
-    // 현재 사용자 ID와 프로필 ID가 일치 하는지 확인
+    // 현재 사용자 ID와  프로필 ID가 일치하는지 확인
     if (sessionData.session.user.id !== newUserProfile.id) {
       console.log('프로필 생성 실패 : 사용자 ID 불일치');
       return false;
