@@ -1,4 +1,4 @@
-d# Infinity Scroll Loop 리스트
+# Infinity Scroll Loop 리스트
 
 - 스크롤시 추가 목록 구현 (UI가 SNS 서비스에 좋다.)
 
