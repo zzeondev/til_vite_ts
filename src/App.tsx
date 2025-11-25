@@ -1,173 +1,160 @@
-import { Link, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import Protected from './components/Protected';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import AdminPage from './pages/AdminPage';
-import AuthCallback from './pages/AuthCallback';
-import HomePage from './pages/HomePage';
-import ProfilePage from './pages/ProfilePage';
-import SignInPage from './pages/SignInPage';
-import SignUpPage from './pages/SignUpPage';
-import TodoDetailPage from './pages/TodoDetailPage';
-import TodoEditPage from './pages/TodoEditPage';
-import TodoListPage from './pages/TodoListPage';
-import TodosInfinitePage from './pages/TodosInfinitePage';
-import TodoWritePage from './pages/TodoWritePage';
-import DirectChatPage from './pages/chat/DirectChatPage';
-// 1:1 채팅 관련 css
-import './components/chat/chat.css';
-import { DirectChatProider, useDirectChat } from './contexts/DirectChatContext';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { store, type RootState } from './redux/store';
+import { onIncrease } from './redux/slices/numSlice';
+import { addLike, removeLike } from './redux/slices/likeSlice';
 
-const TopBar = () => {
-  const { signOut, user } = useAuth();
-  const { hasNewChatNotification } = useDirectChat();
-  // 관리자인 경우 메뉴 추가로 출력하기
-  // isAdmin 에는 true/false
-  const isAdmin = user?.email === 'tarolong@naver.com';
+export default function App() {
+  // state 값 읽기
+  const num = useSelector((state: RootState) => state.num.num);
+
+  // state 값 변경
+  const dispatch = useDispatch();
 
   return (
-    <nav className="nav">
-      <Link to="/" className="nav-link">
-        홈
-      </Link>
-      {user && (
-        <Link to="/todos" className="nav-link">
-          할일
-        </Link>
-      )}
-      {user && (
-        <Link to="/todos-infinite" className="nav-link">
-          무한스크롤 할일
-        </Link>
-      )}
-      {!user && (
-        <Link to="/signup" className="nav-link">
-          회원가입
-        </Link>
-      )}
-      {!user && (
-        <Link to="/signin" className="nav-link">
-          로그인
-        </Link>
-      )}
-      {user && (
-        <Link to="/chat" className="nav-link">
-          1 : 1 채팅
-          {hasNewChatNotification && <span className="notification-badge">●</span>}
-        </Link>
-      )}
-      {user && (
-        <Link to="/profile" className="nav-link">
-          프로필
-        </Link>
-      )}
-      {user && (
-        <button onClick={signOut} className="btn btn-secondary btn-sm">
-          로그아웃
-        </button>
-      )}
+    <div style={container_root}>
+      <div style={container_title}>Root : {num} </div>
 
-      {isAdmin && (
-        <Link to="/admin" className="nav-link">
-          관리자
-        </Link>
-      )}
-    </nav>
-  );
-};
-
-function App() {
-  return (
-    <AuthProvider>
-      <DirectChatProider>
-        <div className="container">
-          <div className="page-header">
-            <h1 className="page-title">👩‍🦰 Todo Service</h1>
-          </div>
-          <Router
-            future={{
-              v7_relativeSplatPath: true,
-              v7_startTransition: true,
-            }}
-          >
-            <TopBar />
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/signin" element={<SignInPage />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route
-                path="/todos"
-                element={
-                  <Protected>
-                    <TodoListPage />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/todos/write"
-                element={
-                  <Protected>
-                    <TodoWritePage />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/todos/edit/:id"
-                element={
-                  <Protected>
-                    <TodoEditPage />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/todos/detail/:id"
-                element={
-                  <Protected>
-                    <TodoDetailPage />
-                  </Protected>
-                }
-              />
-              <Route
-                path="/todos-infinite"
-                element={
-                  <Protected>
-                    <TodosInfinitePage />
-                  </Protected>
-                }
-              />
-
-              <Route
-                path="/profile"
-                element={
-                  <Protected>
-                    <ProfilePage />
-                  </Protected>
-                }
-              />
-
-              <Route
-                path="/admin"
-                element={
-                  <Protected>
-                    <AdminPage />
-                  </Protected>
-                }
-              />
-              {/* 1 : 1 채팅 페이지 */}
-              <Route
-                path="/chat"
-                element={
-                  <Protected>
-                    <DirectChatPage />
-                  </Protected>
-                }
-              />
-            </Routes>
-          </Router>
+      <div style={container}>
+        <div>
+          <Left_1 />
         </div>
-      </DirectChatProider>
-    </AuthProvider>
+        <div>
+          <Right_1 />
+        </div>
+      </div>
+    </div>
+  );
+}
+// 각각이 컴포넌트로 되어 있음.
+function Left_1() {
+  return (
+    <div style={container_div}>
+      <h1>Left_1 : </h1>
+      <div>
+        <Left_2 />
+      </div>
+    </div>
   );
 }
 
-export default App;
+function Left_2() {
+  const like = useSelector((state: RootState) => state.liek.count);
+
+  return (
+    <div style={container_div}>
+      <h1>Left_2 좋아요 :{like}</h1>
+      <div>
+        <Left_3 />
+      </div>
+    </div>
+  );
+}
+
+function Left_3() {
+  return (
+    <div style={container_div}>
+      <h1>Left_3 : </h1>
+      <div>
+        <Left_4 />
+      </div>
+    </div>
+  );
+}
+
+function Left_4() {
+  // state 값 읽기
+  const num = useSelector((state: RootState) => state.num.num);
+
+  return (
+    <div style={container_div}>
+      <h1>Left_4 : {num} </h1>
+    </div>
+  );
+}
+
+// 각각이 컴포넌트로 되어 있음.
+function Right_1() {
+  return (
+    <div style={container_div_2}>
+      <div>
+        <Right_2 />
+      </div>
+    </div>
+  );
+}
+
+function Right_2() {
+  const dispatch = useDispatch();
+
+  return (
+    <div style={container_div_2}>
+      <div>
+        <Right_3 />
+      </div>
+      <div>
+        <button onClick={() => dispatch(addLike())} style={btn}>
+          좋아요
+        </button>
+        <button onClick={() => dispatch(removeLike())} style={btn}>
+          싫어요
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Right_3() {
+  return (
+    <div style={container_div_2}>
+      <div>
+        <Right_4 />
+      </div>
+    </div>
+  );
+}
+
+function Right_4() {
+  const dispatch = useDispatch();
+
+  return (
+    <div style={container_div_2}>
+      <div>
+        <button onClick={() => dispatch(onIncrease())} style={btn}>
+          값의 증가 버튼
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// css 객체
+const container_root: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  border: '5px solid black',
+  padding: 10,
+  gap: 10,
+};
+const container: React.CSSProperties = {
+  border: '5px solid blue',
+  display: 'flex',
+  gap: '10px',
+};
+const container_title: React.CSSProperties = {
+  fontSize: '40px',
+  color: 'blue',
+  border: '5px solid aqua',
+};
+const container_div: React.CSSProperties = {
+  border: '5px solid skyblue',
+  margin: 10,
+};
+const container_div_2: React.CSSProperties = {
+  border: '5px solid yellowgreen',
+  margin: 10,
+};
+const btn: React.CSSProperties = {
+  border: '5px solid #000',
+  padding: 10,
+  margin: 20,
+};
